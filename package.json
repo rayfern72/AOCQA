@@ -1,0 +1,12 @@
+{
+  "name": "slideqa",
+  "version": "1.0.0",
+  "description": "Self-hosted real-time Q&A platform for slide presentations",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["q&a", "slides", "presentation", "realtime"],
+  "license": "MIT"
+}

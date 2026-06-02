@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlideQ&A</title>
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #23232e;
+    --surface3: #2d2d3a;
+    --border: #35354a;
+    --text: #f0f0f5;
+    --muted: #9090a8;
+    --accent: #6c63ff;
+    --accent2: #8b85ff;
+    --accent-glow: rgba(108,99,255,0.18);
+    --green: #3ecf8e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* Layout */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.5px;
+    color: var(--accent2);
+  }
+  .topbar-logo span { color: var(--text); }
+  .topbar-spacer { flex: 1; }
+  .mode-badge {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--accent-glow); color: var(--accent2);
+    border: 1px solid rgba(108,99,255,0.3);
+  }
+  .mode-badge.audience { background: rgba(62,207,142,0.12); color: var(--green); border-color: rgba(62,207,142,0.3); }
+  .connection-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted); transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .connection-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  main { flex: 1; padding: 24px 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+  /* Mode selector on first load */
+  #mode-select {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 70vh; gap: 32px;
+    text-align: center;
+  }
+  #mode-select h1 { font-size: 32px; font-weight: 700; color: var(--text); }
+  #mode-select p { color: var(--muted); font-size: 16px; max-width: 380px; }
+  .mode-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    width: 220px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    text-align: left;
+  }
+  .mode-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(108,99,255,0.15);
+  }
+  .mode-card .icon { font-size: 32px; margin-bottom: 14px; }
+  .mode-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .mode-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Session bar */
+  #session-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .session-select {
+    flex: 1; min-width: 160px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 12px; border-radius: var(--radius);
+    font-size: 14px; cursor: pointer; outline: none;
+    appearance: none;
+  }
+  .session-select:focus { border-color: var(--accent); }
+
+  /* Presenter layout */
+  #presenter-view { display: none; }
+  #audience-view { display: none; }
+
+  .section-title {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+  }
+  .stat-card .val {
+    font-size: 26px; font-weight: 700; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); }
+  .stat-card.accent .val { color: var(--accent2); }
+  .stat-card.green .val { color: var(--green); }
+  .stat-card.amber .val { color: var(--amber); }
+
+  /* Question cards */
+  .q-list { display: flex; flex-direction: column; gap: 10px; }
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .q-card.pinned {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.06);
+  }
+  .q-card.answered {
+    opacity: 0.5;
+  }
+  .q-card-top {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .q-text {
+    flex: 1; font-size: 15px; line-height: 1.6; color: var(--text);
+    word-break: break-word;
+  }
+  .q-meta {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 8px; flex-wrap: wrap;
+  }
+  .q-author { font-size: 12px; color: var(--muted); }
+  .q-time { font-size: 12px; color: var(--muted); }
+  .q-votes {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 600; color: var(--accent2);
+  }
+  .q-votes svg { width: 14px; height: 14px; fill: var(--accent2); }
+  .pinned-badge {
+    font-size: 11px; font-weight: 600; color: var(--accent2);
+    background: var(--accent-glow); border-radius: 4px; padding: 2px 7px;
+  }
+  .answered-badge {
+    font-size: 11px; font-weight: 600; color: var(--green);
+    background: rgba(62,207,142,0.12); border-radius: 4px; padding: 2px 7px;
+  }
+
+  .q-actions {
+    display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .btn {
+    padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap; font-weight: 500;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--text); background: var(--surface3); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent2); }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn.green-btn { border-color: rgba(62,207,142,0.4); color: var(--green); }
+  .btn.green-btn:hover { background: rgba(62,207,142,0.12); }
+  .btn.sm { padding: 4px 9px; font-size: 11px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface2); border-radius: var(--radius); padding: 4px; }
+  .tab {
+    flex: 1; padding: 8px; text-align: center;
+    border-radius: 7px; font-size: 13px; font-weight: 500;
+    cursor: pointer; color: var(--muted); transition: all 0.15s;
+  }
+  .tab.active { background: var(--surface3); color: var(--text); }
+  .tab-count {
+    display: inline-block; background: var(--accent-glow);
+    color: var(--accent2); font-size: 11px; font-weight: 600;
+    border-radius: 10px; padding: 0 6px; margin-left: 5px; min-width: 20px; text-align: center;
+  }
+
+  /* Audience submit form */
+  .submit-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 24px;
+  }
+  .submit-card h2 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
+  .form-input, .form-textarea {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 10px 12px; font-size: 14px;
+    outline: none; transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px; }
+  .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .submit-btn {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: 10px 20px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s; font-family: inherit;
+  }
+  .submit-btn:hover { background: var(--accent2); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .upvote-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 7px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  }
+  .upvote-btn:hover, .upvote-btn.voted {
+    background: var(--accent-glow); border-color: rgba(108,99,255,0.4);
+    color: var(--accent2);
+  }
+  .upvote-btn svg { width: 14px; height: 14px; }
+
+  /* Pinned question display */
+  #pinned-display {
+    background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(108,99,255,0.04));
+    border: 1px solid rgba(108,99,255,0.4);
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 20px;
+    display: none;
+  }
+  #pinned-display .pin-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--accent2); margin-bottom: 8px;
+  }
+  #pinned-display .pin-text {
+    font-size: 18px; font-weight: 500; color: var(--text); line-height: 1.5;
+  }
+  #pinned-display .pin-author {
+    font-size: 12px; color: var(--muted); margin-top: 6px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s; z-index: 1000;
+    max-width: 300px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(62,207,142,0.5); color: var(--green); }
+  .toast.error { border-color: rgba(239,68,68,0.5); color: var(--red); }
+
+  /* Session management */
+  .new-session-form {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .new-session-form input {
+    flex: 1; min-width: 160px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 12px; border-radius: var(--radius);
+    font-size: 14px; outline: none; font-family: inherit;
+  }
+  .new-session-form input:focus { border-color: var(--accent); }
+
+  .qr-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .qr-box { text-align: center; }
+  #qr-canvas { border-radius: 8px; background: white; padding: 6px; }
+  .qr-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .qr-info p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .qr-url {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: 8px 12px;
+    font-size: 13px; color: var(--accent2);
+    word-break: break-all; font-family: monospace;
+  }
+
+  .sort-bar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .sort-bar span { font-size: 12px; color: var(--muted); }
+  .sort-btn {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .sort-btn.active { background: var(--surface3); color: var(--text); border-color: var(--accent); }
+
+  .empty-state {
+    text-align: center; padding: 48px 20px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+
+  /* Password lock screen */
+  #lock-screen {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 70vh; gap: 20px;
+  }
+  .lock-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 340px;
+    text-align: center;
+  }
+  .lock-card .lock-icon { font-size: 28px; margin-bottom: 12px; }
+  .lock-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .lock-card p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .lock-input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 11px 14px; font-size: 15px;
+    outline: none; font-family: inherit; text-align: center;
+    letter-spacing: 2px; margin-bottom: 12px;
+    transition: border-color 0.15s;
+  }
+  .lock-input:focus { border-color: var(--accent); }
+  .lock-input.error { border-color: var(--red); }
+  .lock-btn {
+    width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: 11px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.15s;
+  }
+  .lock-btn:hover { background: var(--accent2); }
+  .lock-error { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+
+  @media (max-width: 600px) {
+    main { padding: 16px 14px; }
+    .topbar { padding: 12px 14px; }
+    .q-actions { flex-direction: row; }
+    .mode-cards { flex-direction: column; }
+    .mode-card { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Slide<span>Q&A</span></div>
+    <div class="topbar-spacer"></div>
+    <div id="mode-indicator" class="mode-badge" style="display:none"></div>
+    <div id="conn-dot" class="connection-dot" title="Connection status"></div>
+  </div>
+
+  <main>
+    <!-- Mode selector -->
+    <div id="mode-select">
+      <h1>SlideQ&A</h1>
+      <p>Real-time audience Q&amp;A for your presentations. No subscriptions, no blocked services.</p>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="requestPresenter()">
+          <div class="icon">🎤</div>
+          <h3>Presenter</h3>
+          <p>Manage sessions, moderate questions, pin highlights</p>
+        </div>
+        <div class="mode-card" onclick="setMode('audience')">
+          <div class="icon">🙋</div>
+          <h3>Audience</h3>
+          <p>Submit questions and upvote others in real time</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password lock screen -->
+    <div id="lock-screen" style="display:none">
+      <div class="lock-card">
+        <div class="lock-icon">🔒</div>
+        <h2>Presenter access</h2>
+        <p>Enter the presenter password to continue</p>
+        <input type="password" class="lock-input" id="lock-input" placeholder="Password" autocomplete="off">
+        <button class="lock-btn" onclick="checkPassword()">Enter</button>
+        <div class="lock-error" id="lock-error">Incorrect password. Try again.</div>
+      </div>
+    </div>
+
+    <!-- Presenter view -->
+    <div id="presenter-view">
+      <div id="session-bar">
+        <select id="session-select" class="session-select" onchange="selectSession(this.value)">
+          <option value="">Select a session...</option>
+        </select>
+        <button class="btn primary" onclick="showNewSession()">+ New Session</button>
+        <button class="btn danger" onclick="clearAnswered()" title="Remove answered questions">Clear answered</button>
+      </div>
+
+      <div id="new-session-form" style="display:none">
+        <div class="new-session-form">
+          <input type="text" id="session-name-input" placeholder="Session name (e.g. Day 1 Keynote)" maxlength="60">
+          <button class="btn primary" onclick="createSession()">Create</button>
+          <button class="btn" onclick="hideNewSession()">Cancel</button>
+        </div>
+      </div>
+
+      <div id="qr-section" class="qr-section" style="display:none">
+        <div class="qr-box">
+          <canvas id="qr-canvas" width="120" height="120"></canvas>
+        </div>
+        <div class="qr-info">
+          <h3>Audience link</h3>
+          <p>Share this with your audience so they can submit questions</p>
+          <div class="qr-url" id="audience-url"></div>
+          <button class="btn sm" style="margin-top:8px" onclick="copyAudienceUrl()">Copy URL</button>
+        </div>
+      </div>
+
+      <div id="presenter-stats" class="stats-row" style="display:none">
+        <div class="stat-card accent"><div class="val" id="stat-total">0</div><div class="lbl">Total questions</div></div>
+        <div class="stat-card amber"><div class="val" id="stat-pending">0</div><div class="lbl">Unanswered</div></div>
+        <div class="stat-card green"><div class="val" id="stat-answered">0</div><div class="lbl">Answered</div></div>
+      </div>
+
+      <div id="presenter-questions" style="display:none">
+        <div class="sort-bar">
+          <span>Sort by:</span>
+          <button class="sort-btn active" onclick="setSort('votes',this)">Most voted</button>
+          <button class="sort-btn" onclick="setSort('newest',this)">Newest</button>
+          <button class="sort-btn" onclick="setSort('oldest',this)">Oldest</button>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="setTab('all',this)">All <span class="tab-count" id="tab-all-count">0</span></div>
+          <div class="tab" onclick="setTab('unanswered',this)">Unanswered <span class="tab-count" id="tab-unanswered-count">0</span></div>
+          <div class="tab" onclick="setTab('answered',this)">Answered <span class="tab-count" id="tab-answered-count">0</span></div>
+        </div>
+        <div class="q-list" id="presenter-q-list"></div>
+      </div>
+    </div>
+
+    <!-- Audience view -->
+    <div id="audience-view">
+      <div id="pinned-display">
+        <div class="pin-label">📌 Highlighted by presenter</div>
+        <div class="pin-text" id="pinned-text"></div>
+        <div class="pin-author" id="pinned-author"></div>
+      </div>
+
+      <div id="audience-session-bar" style="margin-bottom:20px">
+        <div class="section-title">Select Session</div>
+        <select id="audience-session-select" class="session-select" onchange="selectAudienceSession(this.value)" style="max-width:360px">
+          <option value="">Choose a session...</option>
+        </select>
+      </div>
+
+      <div id="submit-card" class="submit-card" style="display:none">
+        <h2>Ask a question</h2>
+        <div class="form-group">
+          <label>Your name (optional)</label>
+          <input type="text" class="form-input" id="author-input" placeholder="Anonymous" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>Question</label>
+          <textarea class="form-textarea" id="question-input" placeholder="Type your question here..." maxlength="500" oninput="updateCharCount()"></textarea>
+          <div class="char-count"><span id="char-count">0</span>/500</div>
+        </div>
+        <div class="submit-row">
+          <span style="font-size:12px; color:var(--muted)">Your question is visible to everyone</span>
+          <button class="submit-btn" onclick="submitQuestion()">Submit question</button>
+        </div>
+      </div>
+
+      <div id="audience-questions" style="display:none">
+        <div class="sort-bar">
+          <span>Sort by:</span>
+          <button class="sort-btn active" onclick="setAudienceSort('votes',this)">Most voted</button>
+          <button class="sort-btn" onclick="setAudienceSort('newest',this)">Newest</button>
+        </div>
+        <div class="q-list" id="audience-q-list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// State
+let mode = null;
+let currentSessionId = null;
+let questions = [];
+let sessions = [];
+let sortMode = 'votes';
+let audienceSortMode = 'votes';
+let currentTab = 'all';
+let votedIds = new Set(JSON.parse(localStorage.getItem('slideqa_voted') || '[]'));
+let eventSource = null;
+let reconnectTimer = null;
+
+// QR Code (simple canvas-based, no external lib)
+function drawQR(canvas, text) {
+  // Minimal QR placeholder - shows URL as text in canvas
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,120,120);
+  ctx.fillStyle = '#000';
+  ctx.font = '7px monospace';
+  ctx.fillText('Scan with', 10, 20);
+  ctx.fillText('WeChat or', 10, 32);
+  ctx.fillText('browser', 10, 44);
+  ctx.font = '6px monospace';
+  // Draw simple border pattern
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(5, 55, 110, 58);
+  ctx.font = '7px monospace';
+  const words = text.replace('http://','').split('/');
+  let y = 70;
+  words.forEach(w => {
+    if (w) { ctx.fillText(w, 12, y); y += 12; }
+  });
+}
+
+// Real QR using qrcode library from npm equivalent
+function loadQR(url) {
+  const canvas = document.getElementById('qr-canvas');
+  // Use QRCode.js if available, else fallback
+  if (window.QRCode) {
+    canvas.width = 120; canvas.height = 120;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,120,120);
+    try {
+      QRCode.toCanvas(canvas, url, { width: 120, margin: 1, color: { dark: '#000', light: '#fff' }});
+    } catch(e) { drawQR(canvas, url); }
+  } else {
+    drawQR(canvas, url);
+  }
+}
+
+// SSE connection
+function connect() {
+  if (eventSource) { eventSource.close(); }
+  eventSource = new EventSource('/api/events');
+
+  eventSource.onopen = () => {
+    document.getElementById('conn-dot').className = 'connection-dot live';
+  };
+
+  eventSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    handleEvent(data);
+  };
+
+  eventSource.onerror = () => {
+    document.getElementById('conn-dot').className = 'connection-dot';
+    eventSource.close();
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 3000);
+  };
+}
+
+function handleEvent(data) {
+  switch(data.type) {
+    case 'init':
+      questions = data.questions || [];
+      sessions = data.sessions ? Object.values(data.sessions) : [];
+      renderAll();
+      break;
+    case 'question_added':
+      questions.push(data.question);
+      renderAll();
+      break;
+    case 'question_updated':
+      const qi = questions.findIndex(q => q.id === data.question.id);
+      if (qi !== -1) questions[qi] = data.question;
+      renderAll();
+      break;
+    case 'question_deleted':
+      questions = questions.filter(q => q.id !== data.questionId);
+      renderAll();
+      break;
+    case 'session_created':
+      sessions.push(data.session);
+      renderSessionSelects();
+      break;
+    case 'session_deleted':
+      sessions = sessions.filter(s => s.id !== data.sessionId);
+      if (currentSessionId === data.sessionId) currentSessionId = null;
+      renderSessionSelects();
+      renderAll();
+      break;
+    case 'cleared':
+      if (data.sessionId) questions = questions.filter(q => q.sessionId !== data.sessionId);
+      else questions = [];
+      renderAll();
+      break;
+  }
+}
+
+function renderAll() {
+  renderSessionSelects();
+  if (mode === 'presenter') renderPresenter();
+  if (mode === 'audience') renderAudience();
+}
+
+// ── PRESENTER PASSWORD ──────────────────────────────────────────
+// Change this to your own password before deploying
+const PRESENTER_PASSWORD = 'myevent2025';
+// ────────────────────────────────────────────────────────────────
+
+function requestPresenter() {
+  document.getElementById('mode-select').style.display = 'none';
+  document.getElementById('lock-screen').style.display = 'flex';
+  setTimeout(() => document.getElementById('lock-input').focus(), 100);
+}
+
+function checkPassword() {
+  const val = document.getElementById('lock-input').value;
+  const input = document.getElementById('lock-input');
+  const err = document.getElementById('lock-error');
+  if (val === PRESENTER_PASSWORD) {
+    input.classList.remove('error');
+    err.style.display = 'none';
+    document.getElementById('lock-screen').style.display = 'none';
+    setMode('presenter');
+  } else {
+    input.classList.add('error');
+    err.style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-select').style.display = 'none';
+  const mi = document.getElementById('mode-indicator');
+  mi.style.display = '';
+  if (m === 'presenter') {
+    mi.textContent = 'Presenter';
+    mi.className = 'mode-badge';
+    document.getElementById('presenter-view').style.display = 'block';
+    renderPresenter();
+  } else {
+    mi.textContent = 'Audience';
+    mi.className = 'mode-badge audience';
+    document.getElementById('audience-view').style.display = 'block';
+    renderAudience();
+  }
+  const url = new URL(window.location);
+  url.searchParams.set('mode', m);
+  window.history.replaceState({}, '', url);
+}
+
+function renderSessionSelects() {
+  // Presenter
+  const ps = document.getElementById('session-select');
+  const pv = ps.value;
+  ps.innerHTML = '<option value="">Select a session...</option>';
+  sessions.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name + ' (' + s.id + ')';
+    ps.appendChild(o);
+  });
+  if (pv) ps.value = pv;
+
+  // Audience
+  const as = document.getElementById('audience-session-select');
+  const av = as.value;
+  as.innerHTML = '<option value="">Choose a session...</option>';
+  sessions.filter(s => s.active).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name;
+    as.appendChild(o);
+  });
+  if (av) as.value = av;
+}
+
+function selectSession(sid) {
+  currentSessionId = sid || null;
+  const qr = document.getElementById('qr-section');
+  const stats = document.getElementById('presenter-stats');
+  const qs = document.getElementById('presenter-questions');
+  if (sid) {
+    qr.style.display = 'flex';
+    stats.style.display = 'grid';
+    qs.style.display = 'block';
+    const audienceUrl = window.location.origin + '/?mode=audience&session=' + sid;
+    document.getElementById('audience-url').textContent = audienceUrl;
+    loadQR(audienceUrl);
+  } else {
+    qr.style.display = 'none';
+    stats.style.display = 'none';
+    qs.style.display = 'none';
+  }
+  renderPresenter();
+}
+
+function selectAudienceSession(sid) {
+  currentSessionId = sid || null;
+  document.getElementById('submit-card').style.display = sid ? 'block' : 'none';
+  document.getElementById('audience-questions').style.display = sid ? 'block' : 'none';
+  renderAudience();
+}
+
+function getSessionQuestions() {
+  if (!currentSessionId) return [];
+  return questions.filter(q => q.sessionId === currentSessionId);
+}
+
+function sortedQuestions(qs, sort) {
+  return [...qs].sort((a, b) => {
+    if (sort === 'votes') return b.votes - a.votes || b.created - a.created;
+    if (sort === 'newest') return b.created - a.created;
+    if (sort === 'oldest') return a.created - b.created;
+    return 0;
+  });
+}
+
+function renderPresenter() {
+  const qs = getSessionQuestions();
+  const total = qs.length;
+  const answered = qs.filter(q => q.answered).length;
+  const pending = total - answered;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-answered').textContent = answered;
+
+  document.getElementById('tab-all-count').textContent = total;
+  document.getElementById('tab-unanswered-count').textContent = pending;
+  document.getElementById('tab-answered-count').textContent = answered;
+
+  let filtered = qs;
+  if (currentTab === 'unanswered') filtered = qs.filter(q => !q.answered);
+  if (currentTab === 'answered') filtered = qs.filter(q => q.answered);
+  filtered = sortedQuestions(filtered, sortMode);
+
+  const list = document.getElementById('presenter-q-list');
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">💬</div><p>No questions yet. Share the audience link!</p></div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(q => `
+    <div class="q-card ${q.pinned ? 'pinned' : ''} ${q.answered ? 'answered' : ''}" id="qcard-${q.id}">
+      <div class="q-card-top">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+            ${q.pinned ? '<span class="pinned-badge">📌 Pinned</span>' : ''}
+            ${q.answered ? '<span class="answered-badge">✓ Answered</span>' : ''}
+          </div>
+          <div class="q-text">${escHtml(q.text)}</div>
+          <div class="q-meta">
+            <span class="q-author">— ${escHtml(q.author)}</span>
+            <span class="q-time">${timeAgo(q.created)}</span>
+            <span class="q-votes"><svg viewBox="0 0 16 16"><path d="M8 1l2.5 5H14l-4 3.5 1.5 5.5L8 12 4.5 15l1.5-5.5L2 6h3.5z"/></svg>${q.votes}</span>
+          </div>
+        </div>
+        <div class="q-actions">
+          <button class="btn sm ${q.pinned ? 'primary' : ''}" onclick="togglePin(${q.id},${!q.pinned})">${q.pinned ? 'Unpin' : 'Pin'}</button>
+          <button class="btn sm ${q.answered ? 'green-btn' : ''}" onclick="toggleAnswered(${q.id},${!q.answered})">${q.answered ? 'Reopen' : 'Mark answered'}</button>
+          <button class="btn sm danger" onclick="deleteQuestion(${q.id})">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAudience() {
+  const qs = getSessionQuestions();
+
+  // Show pinned
+  const pinned = qs.find(q => q.pinned && !q.answered);
+  const pd = document.getElementById('pinned-display');
+  if (pinned) {
+    pd.style.display = 'block';
+    document.getElementById('pinned-text').textContent = pinned.text;
+    document.getElementById('pinned-author').textContent = '— ' + pinned.author;
+  } else {
+    pd.style.display = 'none';
+  }
+
+  const sorted = sortedQuestions(qs, audienceSortMode);
+  const list = document.getElementById('audience-q-list');
+
+  if (sorted.length === 0 && currentSessionId) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">✋</div><p>No questions yet. Be the first to ask!</p></div>';
+    return;
+  }
+
+  list.innerHTML = sorted.map(q => `
+    <div class="q-card ${q.pinned ? 'pinned' : ''} ${q.answered ? 'answered' : ''}">
+      <div class="q-card-top">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            ${q.pinned ? '<span class="pinned-badge">📌</span>' : ''}
+            ${q.answered ? '<span class="answered-badge">✓ Answered</span>' : ''}
+          </div>
+          <div class="q-text">${escHtml(q.text)}</div>
+          <div class="q-meta">
+            <span class="q-author">— ${escHtml(q.author)}</span>
+            <span class="q-time">${timeAgo(q.created)}</span>
+          </div>
+        </div>
+        <button class="upvote-btn ${votedIds.has(q.id) ? 'voted' : ''}" onclick="upvote(${q.id})" ${votedIds.has(q.id) ? 'disabled' : ''}>
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L5 7H3l5 5 5-5h-2z"/></svg>
+          ${q.votes}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Actions
+function showNewSession() {
+  document.getElementById('new-session-form').style.display = 'block';
+  document.getElementById('session-name-input').focus();
+}
+function hideNewSession() {
+  document.getElementById('new-session-form').style.display = 'none';
+}
+
+async function createSession() {
+  const name = document.getElementById('session-name-input').value.trim() || 'My Session';
+  const res = await fetch('/api/sessions', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ name })
+  });
+  const sess = await res.json();
+  hideNewSession();
+  document.getElementById('session-name-input').value = '';
+  document.getElementById('session-select').value = sess.id;
+  selectSession(sess.id);
+  toast('Session created: ' + sess.name, 'success');
+}
+
+async function submitQuestion() {
+  const text = document.getElementById('question-input').value.trim();
+  const author = document.getElementById('author-input').value.trim() || 'Anonymous';
+  if (!text) { toast('Please enter a question', 'error'); return; }
+  if (!currentSessionId) { toast('Please select a session first', 'error'); return; }
+
+  const btn = document.querySelector('.submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  try {
+    await fetch('/api/questions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sessionId: currentSessionId, text, author })
+    });
+    document.getElementById('question-input').value = '';
+    updateCharCount();
+    toast('Question submitted!', 'success');
+  } catch(e) { toast('Failed to submit', 'error'); }
+
+  btn.disabled = false; btn.textContent = 'Submit question';
+}
+
+async function upvote(qid) {
+  if (votedIds.has(qid)) return;
+  votedIds.add(qid);
+  localStorage.setItem('slideqa_voted', JSON.stringify([...votedIds]));
+  await fetch('/api/questions/upvote', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ questionId: qid })
+  });
+}
+
+async function togglePin(qid, val) {
+  await fetch('/api/questions/' + qid, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ pinned: val })
+  });
+}
+
+async function toggleAnswered(qid, val) {
+  await fetch('/api/questions/' + qid, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ answered: val })
+  });
+}
+
+async function deleteQuestion(qid) {
+  if (!confirm('Delete this question?')) return;
+  await fetch('/api/questions/' + qid, { method: 'DELETE' });
+}
+
+async function clearAnswered() {
+  if (!currentSessionId) return;
+  const count = getSessionQuestions().filter(q => q.answered).length;
+  if (!count) { toast('No answered questions to clear', ''); return; }
+  if (!confirm('Remove ' + count + ' answered question(s)?')) return;
+  // Delete answered ones
+  const toDelete = getSessionQuestions().filter(q => q.answered);
+  await Promise.all(toDelete.map(q => fetch('/api/questions/' + q.id, { method: 'DELETE' })));
+}
+
+function setSort(s, el) {
+  sortMode = s;
+  document.querySelectorAll('#presenter-view .sort-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderPresenter();
+}
+
+function setAudienceSort(s, el) {
+  audienceSortMode = s;
+  document.querySelectorAll('#audience-view .sort-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderAudience();
+}
+
+function setTab(t, el) {
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderPresenter();
+}
+
+function updateCharCount() {
+  const v = document.getElementById('question-input').value.length;
+  document.getElementById('char-count').textContent = v;
+}
+
+function copyAudienceUrl() {
+  const url = document.getElementById('audience-url').textContent;
+  navigator.clipboard.writeText(url).then(() => toast('URL copied!', 'success'));
+}
+
+// Utilities
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.className = 'toast ' + type, 2500);
+}
+
+// Init
+function init() {
+  connect();
+
+  // Check URL params
+  const params = new URLSearchParams(window.location.search);
+  const m = params.get('mode');
+  const session = params.get('session');
+
+  if (m) {
+    setTimeout(() => {
+      if (m === 'presenter') {
+        requestPresenter();
+      } else {
+        setMode(m);
+      }
+      if (session && m === 'audience') {
+        document.getElementById('audience-session-select').value = session;
+        selectAudienceSession(session);
+      }
+    }, 300);
+  }
+
+  document.getElementById('lock-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+  // Enter key for new session
+  document.getElementById('session-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createSession();
+  });
+  document.getElementById('question-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitQuestion();
+  });
+}
+
+init();
+</script>
+
+<!-- Try to load QRCode.js for better QR codes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" onerror="console.log('QRCode lib not available, using fallback')"></script>
+</body>
+</html>
