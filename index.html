@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SlideQ&A</title>
+<title>AUTOSAR Open Conference — Q&A</title>
 <style>
   :root {
     --bg: #0f0f13;
@@ -13,9 +13,9 @@
     --border: #35354a;
     --text: #f0f0f5;
     --muted: #9090a8;
-    --accent: #6c63ff;
-    --accent2: #8b85ff;
-    --accent-glow: rgba(108,99,255,0.18);
+    --accent: #cc1111;
+    --accent2: #e03333;
+    --accent-glow: rgba(204,17,17,0.15);
     --green: #3ecf8e;
     --amber: #f59e0b;
     --red: #ef4444;
@@ -23,379 +23,340 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.5;
+    font-family: -apple-system,'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; font-size: 15px; line-height: 1.5;
   }
-
-  /* Layout */
   #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* Header with logo */
+  .site-header {
+    background: #0a0a0e;
+    border-bottom: 1px solid #1e1e28;
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .site-header img {
+    height: 48px; width: auto; display: block;
+  }
+  .header-divider {
+    width: 1px; height: 36px;
+    background: #2a2a38; flex-shrink: 0;
+  }
+  .header-event {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .header-event-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    line-height: 1.2;
+  }
+  .header-event-sub {
+    font-size: 11px; color: var(--muted);
+  }
+  .header-spacer { flex: 1; }
+
+  /* Topbar */
   .topbar {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 20px;
-    background: var(--surface);
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; background: var(--surface);
     border-bottom: 1px solid var(--border);
     position: sticky; top: 0; z-index: 100;
   }
-  .topbar-logo {
-    font-size: 18px; font-weight: 700; letter-spacing: -0.5px;
-    color: var(--accent2);
-  }
-  .topbar-logo span { color: var(--text); }
+  .topbar-label { font-size: 13px; font-weight: 600; color: var(--muted); }
   .topbar-spacer { flex: 1; }
   .mode-badge {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 20px;
     background: var(--accent-glow); color: var(--accent2);
-    border: 1px solid rgba(108,99,255,0.3);
+    border: 1px solid rgba(204,17,17,0.3);
   }
-  .mode-badge.audience { background: rgba(62,207,142,0.12); color: var(--green); border-color: rgba(62,207,142,0.3); }
+  .mode-badge.audience {
+    background: rgba(62,207,142,0.1); color: var(--green);
+    border-color: rgba(62,207,142,0.3);
+  }
   .connection-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--muted); transition: background 0.3s;
-    flex-shrink: 0;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted); transition: background 0.3s; flex-shrink: 0;
   }
-  .connection-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .connection-dot.live { background: var(--green); box-shadow: 0 0 5px var(--green); }
 
-  main { flex: 1; padding: 24px 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+  main { flex: 1; padding: 24px 20px; max-width: 960px; margin: 0 auto; width: 100%; }
 
-  /* Mode selector on first load */
+  /* Mode select */
   #mode-select {
     display: flex; flex-direction: column; align-items: center;
-    justify-content: center; min-height: 70vh; gap: 32px;
-    text-align: center;
+    justify-content: center; min-height: 55vh; gap: 28px; text-align: center;
   }
-  #mode-select h1 { font-size: 32px; font-weight: 700; color: var(--text); }
-  #mode-select p { color: var(--muted); font-size: 16px; max-width: 380px; }
-  .mode-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  #mode-select h1 { font-size: 24px; font-weight: 700; }
+  #mode-select p { color: var(--muted); font-size: 14px; max-width: 360px; }
+  .mode-cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
   .mode-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px 28px;
-    width: 220px;
-    cursor: pointer;
-    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-    text-align: left;
-  }
-  .mode-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(108,99,255,0.15);
-  }
-  .mode-card .icon { font-size: 32px; margin-bottom: 14px; }
-  .mode-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-  .mode-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-  /* Session bar */
-  #session-bar {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 24px; flex-wrap: wrap;
-  }
-  .session-select {
-    flex: 1; min-width: 160px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); padding: 9px 12px; border-radius: var(--radius);
-    font-size: 14px; cursor: pointer; outline: none;
-    appearance: none;
-  }
-  .session-select:focus { border-color: var(--accent); }
-
-  /* Presenter layout */
-  #presenter-view { display: none; }
-  #audience-view { display: none; }
-
-  .section-title {
-    font-size: 12px; font-weight: 600; letter-spacing: 0.8px;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 12px;
-  }
-
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px; margin-bottom: 24px;
-  }
-  .stat-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px 16px;
+    border-radius: 14px; padding: 26px 22px; width: 200px;
+    cursor: pointer; transition: border-color 0.2s, transform 0.15s; text-align: left;
   }
-  .stat-card .val {
-    font-size: 26px; font-weight: 700; line-height: 1;
-    margin-bottom: 4px;
-  }
-  .stat-card .lbl { font-size: 12px; color: var(--muted); }
-  .stat-card.accent .val { color: var(--accent2); }
-  .stat-card.green .val { color: var(--green); }
-  .stat-card.amber .val { color: var(--amber); }
+  .mode-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .mode-card .icon { font-size: 26px; margin-bottom: 10px; }
+  .mode-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .mode-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
-  /* Question cards */
-  .q-list { display: flex; flex-direction: column; gap: 10px; }
-  .q-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    transition: border-color 0.2s;
-    position: relative;
+  /* Lock */
+  #lock-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; min-height: 55vh;
   }
-  .q-card.pinned {
-    border-color: var(--accent);
-    background: rgba(108,99,255,0.06);
+  .lock-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 30px 26px; width: 100%; max-width: 320px; text-align: center;
   }
-  .q-card.answered {
-    opacity: 0.5;
+  .lock-icon { font-size: 24px; margin-bottom: 10px; }
+  .lock-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+  .lock-card p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .lock-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 10px 12px;
+    font-size: 15px; outline: none; font-family: inherit;
+    text-align: center; letter-spacing: 2px; margin-bottom: 11px;
+    transition: border-color 0.15s;
   }
-  .q-card-top {
-    display: flex; align-items: flex-start; gap: 10px;
+  .lock-input:focus { border-color: var(--accent); }
+  .lock-input.shake { animation: shake 0.3s; border-color: var(--red); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .lock-btn {
+    width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
   }
-  .q-text {
-    flex: 1; font-size: 15px; line-height: 1.6; color: var(--text);
-    word-break: break-word;
-  }
-  .q-meta {
-    display: flex; align-items: center; gap: 10px;
-    margin-top: 8px; flex-wrap: wrap;
-  }
-  .q-author { font-size: 12px; color: var(--muted); }
-  .q-time { font-size: 12px; color: var(--muted); }
-  .q-votes {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 13px; font-weight: 600; color: var(--accent2);
-  }
-  .q-votes svg { width: 14px; height: 14px; fill: var(--accent2); }
-  .pinned-badge {
-    font-size: 11px; font-weight: 600; color: var(--accent2);
-    background: var(--accent-glow); border-radius: 4px; padding: 2px 7px;
-  }
-  .answered-badge {
-    font-size: 11px; font-weight: 600; color: var(--green);
-    background: rgba(62,207,142,0.12); border-radius: 4px; padding: 2px 7px;
-  }
+  .lock-btn:hover { background: var(--accent2); }
+  .lock-error { font-size: 12px; color: var(--red); margin-top: 7px; display: none; }
 
-  .q-actions {
-    display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;
-    align-items: flex-start;
-  }
+  /* Buttons */
   .btn {
     padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border);
     background: var(--surface2); color: var(--muted);
     font-size: 12px; cursor: pointer; transition: all 0.15s;
-    white-space: nowrap; font-weight: 500;
+    white-space: nowrap; font-weight: 500; font-family: inherit;
   }
   .btn:hover { border-color: var(--accent); color: var(--text); background: var(--surface3); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .btn.primary:hover { background: var(--accent2); }
-  .btn.danger:hover { border-color: var(--red); color: var(--red); }
-  .btn.green-btn { border-color: rgba(62,207,142,0.4); color: var(--green); }
-  .btn.green-btn:hover { background: rgba(62,207,142,0.12); }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.06); }
+  .btn.success { border-color: rgba(62,207,142,0.4); color: var(--green); }
+  .btn.success:hover { background: rgba(62,207,142,0.1); }
+  .btn.export-btn { border-color: rgba(245,158,11,0.35); color: var(--amber); }
+  .btn.export-btn:hover { background: rgba(245,158,11,0.08); }
   .btn.sm { padding: 4px 9px; font-size: 11px; }
 
-  /* Tabs */
-  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface2); border-radius: var(--radius); padding: 4px; }
-  .tab {
-    flex: 1; padding: 8px; text-align: center;
-    border-radius: 7px; font-size: 13px; font-weight: 500;
-    cursor: pointer; color: var(--muted); transition: all 0.15s;
+  /* Section title */
+  .section-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--muted);
   }
-  .tab.active { background: var(--surface3); color: var(--text); }
-  .tab-count {
-    display: inline-block; background: var(--accent-glow);
-    color: var(--accent2); font-size: 11px; font-weight: 600;
-    border-radius: 10px; padding: 0 6px; margin-left: 5px; min-width: 20px; text-align: center;
-  }
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 
-  /* Audience submit form */
-  .submit-card {
+  /* Session cards — Presenter */
+  .session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .session-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; margin-bottom: 24px;
+    border-radius: 12px; padding: 16px;
+    cursor: pointer; transition: border-color 0.2s, transform 0.15s;
   }
-  .submit-card h2 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
-  .form-group { margin-bottom: 12px; }
-  .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
-  .form-input, .form-textarea {
-    width: 100%; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); padding: 10px 12px; font-size: 14px;
-    outline: none; transition: border-color 0.15s;
-    font-family: inherit;
-  }
-  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
-  .form-textarea { resize: vertical; min-height: 80px; }
-  .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px; }
-  .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .submit-btn {
-    background: var(--accent); color: #fff;
-    border: none; border-radius: 8px; padding: 10px 20px;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    transition: background 0.15s; font-family: inherit;
-  }
-  .submit-btn:hover { background: var(--accent2); }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .session-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .session-card-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .session-card-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .session-card-stats { display: flex; gap: 7px; margin-bottom: 12px; flex-wrap: wrap; }
+  .sstat { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .sstat.q { background: var(--accent-glow); color: var(--accent2); }
+  .sstat.live { background: rgba(62,207,142,0.12); color: var(--green); }
+  .session-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  .upvote-btn {
-    display: flex; align-items: center; gap: 5px;
-    padding: 6px 12px; border-radius: 7px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--muted); font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  /* Session cards — Audience */
+  .audience-session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px; margin-bottom: 24px;
   }
-  .upvote-btn:hover, .upvote-btn.voted {
-    background: var(--accent-glow); border-color: rgba(108,99,255,0.4);
-    color: var(--accent2);
-  }
-  .upvote-btn svg { width: 14px; height: 14px; }
-
-  /* Pinned question display */
-  #pinned-display {
-    background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(108,99,255,0.04));
-    border: 1px solid rgba(108,99,255,0.4);
-    border-radius: 14px; padding: 18px 20px; margin-bottom: 20px;
-    display: none;
-  }
-  #pinned-display .pin-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
-    text-transform: uppercase; color: var(--accent2); margin-bottom: 8px;
-  }
-  #pinned-display .pin-text {
-    font-size: 18px; font-weight: 500; color: var(--text); line-height: 1.5;
-  }
-  #pinned-display .pin-author {
-    font-size: 12px; color: var(--muted); margin-top: 6px;
-  }
-
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 24px; right: 24px;
+  .aud-session-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px 18px;
-    font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-    transform: translateY(80px); opacity: 0;
-    transition: all 0.3s; z-index: 1000;
-    max-width: 300px;
+    border-radius: 12px; padding: 16px;
+    cursor: pointer; transition: all 0.2s;
   }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { border-color: rgba(62,207,142,0.5); color: var(--green); }
-  .toast.error { border-color: rgba(239,68,68,0.5); color: var(--red); }
+  .aud-session-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .aud-session-card.selected { border-color: var(--accent); background: rgba(204,17,17,0.05); }
+  .aud-sess-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .aud-sess-sub { font-size: 12px; color: var(--muted); }
+  .aud-sess-tap { font-size: 11px; color: var(--accent2); margin-top: 8px; font-weight: 500; }
 
-  /* Session management */
-  .new-session-form {
-    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
-  }
+  /* New session form */
+  .new-session-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .new-session-form input {
-    flex: 1; min-width: 160px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); padding: 9px 12px; border-radius: var(--radius);
+    flex: 1; min-width: 160px; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--text);
+    padding: 8px 11px; border-radius: var(--radius);
     font-size: 14px; outline: none; font-family: inherit;
   }
   .new-session-form input:focus { border-color: var(--accent); }
 
+  /* Active session panel */
+  .back-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .back-bar h2 { font-size: 15px; font-weight: 600; flex: 1; }
+
+  /* Stats */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px; margin-bottom: 18px;
+  }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .stat-card .val { font-size: 22px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
+  .stat-card .lbl { font-size: 11px; color: var(--muted); }
+  .stat-card.c-accent .val { color: var(--accent2); }
+  .stat-card.c-amber .val { color: var(--amber); }
+  .stat-card.c-green .val { color: var(--green); }
+  .live-indicator { display: flex; align-items: center; gap: 5px; }
+  .live-dot-sm { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 4px var(--green); flex-shrink: 0; }
+
+  /* QR */
   .qr-section {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; margin-bottom: 20px;
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
-  .qr-box { text-align: center; }
-  #qr-canvas { border-radius: 8px; background: white; padding: 6px; }
-  .qr-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .qr-info p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  #qr-canvas { border-radius: 6px; background: white; padding: 4px; display: block; }
+  .qr-info h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .qr-info p { font-size: 12px; color: var(--muted); margin-bottom: 7px; }
   .qr-url {
     background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 7px; padding: 8px 12px;
-    font-size: 13px; color: var(--accent2);
-    word-break: break-all; font-family: monospace;
+    border-radius: 6px; padding: 6px 10px; font-size: 12px;
+    color: var(--accent2); word-break: break-all; font-family: monospace;
   }
 
-  .sort-bar {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 2px; margin-bottom: 14px;
+    background: var(--surface2); border-radius: var(--radius); padding: 3px;
   }
-  .sort-bar span { font-size: 12px; color: var(--muted); }
-  .sort-btn {
-    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted);
-    font-size: 12px; cursor: pointer; transition: all 0.15s;
-  }
+  .tab { flex: 1; padding: 6px; text-align: center; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--surface3); color: var(--text); }
+  .tab-count { display: inline-block; background: var(--accent-glow); color: var(--accent2); font-size: 10px; font-weight: 600; border-radius: 10px; padding: 0 5px; margin-left: 4px; }
+
+  /* Sort */
+  .sort-bar { display: flex; align-items: center; gap: 7px; margin-bottom: 11px; flex-wrap: wrap; }
+  .sort-bar span { font-size: 11px; color: var(--muted); }
+  .sort-btn { padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
   .sort-btn.active { background: var(--surface3); color: var(--text); border-color: var(--accent); }
 
-  .empty-state {
-    text-align: center; padding: 48px 20px; color: var(--muted);
-  }
-  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
-  .empty-state p { font-size: 14px; }
+  /* Question cards */
+  .q-list { display: flex; flex-direction: column; gap: 8px; }
+  .q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; transition: border-color 0.2s; }
+  .q-card.pinned { border-color: var(--accent); background: rgba(204,17,17,0.04); }
+  .q-card.answered { opacity: 0.45; }
+  .q-card.own { border-color: rgba(62,207,142,0.3); }
+  .q-card-top { display: flex; align-items: flex-start; gap: 10px; }
+  .q-text { flex: 1; font-size: 14px; line-height: 1.6; color: var(--text); word-break: break-word; }
+  .q-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+  .q-author { font-size: 11px; color: var(--muted); }
+  .q-votes { font-size: 12px; font-weight: 600; color: var(--accent2); }
+  .badge-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+  .badge { font-size: 10px; font-weight: 600; border-radius: 4px; padding: 1px 6px; }
+  .badge.pin { color: var(--accent2); background: var(--accent-glow); }
+  .badge.ans { color: var(--green); background: rgba(62,207,142,0.12); }
+  .badge.own { color: var(--green); background: rgba(62,207,142,0.12); }
+  .q-actions { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; align-items: flex-start; }
 
-  /* Password lock screen */
-  #lock-screen {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; min-height: 70vh; gap: 20px;
+  /* Audience submit */
+  .submit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+  .submit-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .form-group { margin-bottom: 10px; }
+  .form-group label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+  .form-input, .form-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 9px 11px; font-size: 14px; outline: none; transition: border-color 0.15s; font-family: inherit; }
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 75px; }
+  .char-count { font-size: 10px; color: var(--muted); text-align: right; margin-top: 3px; }
+  .submit-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+  .submit-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; }
+  .submit-btn:hover { background: var(--accent2); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Pinned */
+  #pinned-display {
+    background: rgba(204,17,17,0.06); border: 1px solid rgba(204,17,17,0.3);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: none;
   }
-  .lock-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 340px;
-    text-align: center;
-  }
-  .lock-card .lock-icon { font-size: 28px; margin-bottom: 12px; }
-  .lock-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-  .lock-card p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-  .lock-input {
-    width: 100%; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); padding: 11px 14px; font-size: 15px;
-    outline: none; font-family: inherit; text-align: center;
-    letter-spacing: 2px; margin-bottom: 12px;
-    transition: border-color 0.15s;
-  }
-  .lock-input:focus { border-color: var(--accent); }
-  .lock-input.error { border-color: var(--red); }
-  .lock-btn {
-    width: 100%; background: var(--accent); color: #fff;
-    border: none; border-radius: 8px; padding: 11px;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    font-family: inherit; transition: background 0.15s;
-  }
-  .lock-btn:hover { background: var(--accent2); }
-  .lock-error { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+  #pinned-display .pin-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--accent2); margin-bottom: 6px; }
+  #pinned-display .pin-text { font-size: 17px; font-weight: 500; color: var(--text); line-height: 1.5; }
+  #pinned-display .pin-author { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Privacy notice */
+  .privacy-notice { background: rgba(62,207,142,0.05); border: 1px solid rgba(62,207,142,0.2); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--green); margin-bottom: 12px; }
+
+  /* Empty */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 30px; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: 13px; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 1000; max-width: 260px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(62,207,142,0.5); color: var(--green); }
+  .toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
 
   @media (max-width: 600px) {
-    main { padding: 16px 14px; }
-    .topbar { padding: 12px 14px; }
-    .q-actions { flex-direction: row; }
+    main { padding: 14px 12px; }
+    .site-header { padding: 12px 14px; }
+    .site-header img { height: 36px; }
     .mode-cards { flex-direction: column; }
     .mode-card { width: 100%; }
+    .session-grid, .audience-session-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 <div id="app">
+
+  <!-- Header -->
+  <div class="site-header">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfMAAABICAYAAADidRxJAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAABenElEQVR42u1dd3hUVfp+zzn3zkx6AgmhI9JDEyYqSEkoKoJlURJRsbuJoqKra9ldNRkU3bUtKhZiW5e1Ja4F0Z+dxIKNqKAUKVKE0Akhbebec873+2PujUNMIDRFd97nuU9CmJk795Tv+97vfAWIIooooogiiiiiiCKKKKKIIooooogiiiiiiCKKKKKIIooooogiiiiiiCKKKKKIIooooogiiiiiiCKKKKKIIooooogiiiiiiCKKKKKIIooooogiiiiiiCKKKKKIIooooogiiiiiiCKKKKKIogVg0SGIIorfBAQA5ADIAAgApgOaudv4EOxkIsJtAF/qfFpJ+M8azv1+T2OZk5PT4heXlJSo6PKLIqrMDyP8fr/p9/tRXl4Ov9/foveUl5fj6KOP1tENGsWRvjf9gAEAfgBFgA3GGmvfw3Tnn+5DWrNMxoyG/QPI34hy536/X/j9fkReACCEsLXWLfsQzqGUMiPlR3l5ecPv33//PZWVlckjcQBycnJESkoKd7+rIzP3+b4j+Zmi+P0pc0ZEYIxRdAqj+L2wxSyAfQhIV5mGdXXDEvcLICkGkAnA5FRgNwOmxApTm6aHx3pMxEAjgQHxXh/AAKU1uLvFWVhHEwGcCzAwVNk26gDUSRv1Suo62+IG2XdXW1i0BmC14ZuX7annGRiAs4jEVoCVhV/zqxrGBQUFPDs7m2dnZyshBLVAUQ+Mj49PDgaDJKVsVgb6fD4Eg0ELwKctVfyMMbz33ntGaWkpAoGA+rUMn4KCAh4IBPSv9f7/GQXKGBhjUErx0tJS/sgjj9CvRRTZb3UAiQgnn3zyPVLKJCKCEIK14H3KsiyxcuXKVzdu3Ph2Tk7O4R54dpBjrA/l5i4sLNzv9xUWFqKZTc3w+z+mocMsjLkfEH4AjwM2udoW4ADapAO3twKoPWPM9JqXdUxMRjtfLNKEibaaoRU3kWyYiDNMJHg9EKwegmkwLqC1AuccnPOfNrpjJHAIMBLQjEGbBmqhUalD2Kkt7CIb26wgtgYlqrTETrLmrd66a/P6XRaqAWwDbgOwBYCGo9gHE5nlgP1rMM+bbrqJZ2ZmRt7bBKA6duyY2aNHjz8OGjRI9e/fX/Tt2xe9evVi8fHx9Nprr12YkJBgSikblDA18nIQETjnqKurw4QJE54yTVOvX78e69evR0VFBZYsWaIXL17Mly5d+uOKFSvucOZMR+5ZwzDw8MMPm3l5efKXJB45OTmipKREnXjiiRcJIU6QUmrLsoQQAqZp/uxZI+SjNgyDBYPBtR988MGdrpz9Nb0rvyFZ0TDvCxcuNP1+v/ylyeZvTRizhQsXGpmZmeq9996bM3To0HOVUg3W0b6glIJhGHjqqafo6quvThVC7FRK8UOpNAEgKyvLKCsrk2lpaZNmzZr1qN/vt2tqaszmBEckTNOUtm0b06ZNe7OsrOxCv99vlpeXH7CgJCKDMSYXLFjw/NChQ8ci7CY1WvBWCcBYsGDBW8OGDTt/4cKFZmZmpj179mwzPz/fnj179mXZ2dl3SSltKaX5e9HejgK0pZTmRx99dPtVV131oPvMh+oWWQD/CJC0p7Ac5AXSuwJ/6xqX2Lu76TG6c0/yUYnJaOPzIcYwECe49BHgBRjTNogUZ6QBkuElTGFbQGsCA2CYYQZOjgGMsDcLjHNoSMda4eCGAXABJRi46dHca5AiMMmIahU3dmuG7VLih+oqLN9VuXtZXZ21a1f1tC+0XamATQAWuYx9BJFRFmbqh0WQ5eTkiJdfflkptYcN3uPpp5/utmbNmsvS09Ozhw8fLjt37pxiGIbH5/PBMIzm1ndLFQpvYl8hFAohGAxCSrl9+fLltHjxYrZhw4alEyZMmHHHHXcYb731VhmA2l9y/RYXF4ucnBw9ceLEy++6665HOnfuDNdT4crJ5uSPa8Ds2rULN9544z+fffbZv+bl5amioqJf1FAjIsYYo+eee+6LgQMHdiUirbXmv7Jh8TM5UVNTg1WrVumdO3fyjh073gtg0SWXXGJVVVV94D5Hbm4u/6WYuvFbErTFxcU8MzPTvvTSS/8zbNiwc30+n+VstP2ZZT116lRvfX39bTfeeOONBQUF+jC6k2L69euX2q1bt/1+Y+vWrVsB4TMu97zrINEKQOp+m5tat4r8t3vm1rlz59iePXum4neMysrK+MhnPkijmfsB/hVglzGmQQQQDesGXNnHMOzOsfFn9UpMiuvEBbokJKE19yDGhm3YEsy2EJJBgwCDoImUggkGEwzMYCQMrjTn4OAAZ4AQ0IaApRQUAZwxcE7wGiYMAJa2QIYJQRxQTChJTBGgpEZI1nEWZIwzBhNAByZkOwPUxSfQPzkJ4zq3TqwNSmzcVfvc8to6fLFtc+3SqpqXFip1PQE1ZYyFGAgUtifoEO9/kZub6wpG3+WXX372lVdeeSJjbGTnzp07JSQkNH5Lk0pISmkwxgwignNc16z3z2HYtta6wcvh/r/P54PP5+MAUocPH47hw4cDwEit9cj77rsPM2fO/Ozzzz9fvWzZsgf+/ve/f4lwEONh9QROnjxZ5ebm4tVXX72nd+/e5IzB/pA2Fhsby/Ly8v60fPnymU888cT6X8vl3r9//zYZGRlHtIwZMmSI++vf6+vrMXfuXHDOn33vvffuZIwtBaAarduoMi8oKOCTJ09WU6ZM6Xrdddf9wefzSaWUyTlnzW3IZpQThBDWGWeccc3zzz9fPn369Dl5eXnm4bA+DcPQwWCQANi2bZtCiJZYfFIpZSilDvX3sR3hul/MXAjR5PewLEtrrYlzbiulzJaO/5EO58jG1lqbwWDwYDcgywLEh2CSGFQ5kQLQP5OoRxcz7o/pXt+Jx6e1E/3iYpBSX4MUTlJDCatmJ5gWEOQxBXEyDVLMYCroFbC8MYYlBHZJgqUYarTNdmnJ65SCgkTIlqgjQDIgRIT6kAWlbPgME/E+L7yGgCaNGMNAjBZIMDyI4wZ8XhNJSXEwSMK0Q/BYtvRJDSktYSuwYFBB2hIxXFCyzdA7KVGdkJKMEzu1i1tN1oVfbN521scbt9Uu3bXrmgrgdQB1jkI8aAVWUFDAb7/9dp2bm6vatm2bdcUVV1yWlZV1ut/vT4yPj29Yrw57Y+4+I6Im12UzTH1vMCMVubtOIhQ7aa3dv5EQQmdkZADAkF69eg1ZtGjRmTt37kx6/PHH7cPILllBQYEZCARi77777ifPOOMMDwCltfa4xkeLP4gxPXLkSPvSSy/979SpU8/atGnTpsau5F8CVljIkHNffqTKC3fMYmJiaOTIkRzAef379580cuTIV2bMmFGUm5s7n4gEY+ywKnTjNyJgWWFhIddap4wZM+ajjIyMWKUUMcaYUgpCiBYvVsYYbNs2evbsqe+4444bJ0yYML9du3abXdfOId9h4S/GOOessUBo7i2cc8YOvXZkja4WvZ6I2F7c0Szi+/5ulPl+zlfT7mBAvASoMjAJUEwi4ZJu3BgzMDnxhJHxael9YaJTjAceKyRp+3YIkwkb0rAFI/J6wZlH2wpUzwyjnglju1bYWFePddu31VVoJbcQdKWUvFqrcibthyrq68VOQNUAsFrmphGtARVrePLjTHNooiF0anycaEuKOnhFQrfEJKNzYjLijVj4hKE8HgNQQViWxUloFgyGDDAbrTw+SjE96riuXeMnt2sfP79y2wtl2zaV/t/6yolVRJIxVjMy7HqXB7r3OeeaiHz//ve//9C9e/fnhw4d2mCYK6WkUoobhmE0nq/DuSYbfXbkWmFExJVS4JyHtNae999//4GioiJ5OAV6cXExP/vss62rrrpq+AUXXHAmACWlFAdguEApxYUQ6vzzz89csmRJ7sMPP3yvQ3h+UWXu7MH9kVm/JgQRuWRRJiUleUePHj05KSlp8rvvvns+Y+w/BQUFnkAgYB2uL/CbUOYlJSU8EAjIWbNm5Z5zzjkdACgiEpzz/VLkrrDm4Z2nxo0b1y8/P/+JQCAwLjs728ABCpwoonCRBRjZAAKMSRCx1qBz+3rj7xwen9J5VGIqOnkAH0I2qTpRV7eD2abH8MSbmocgfWaSAXC2MWhjBQ+KZRTE8upqqqm1nlsrLVatNa0j+jOAXRG3DEZomJ9ZY81ZpzsB7AQB0noF0vIBIFTvNgCoRGBkMjZdFG8YdhuPOLdf+3ZGRlIqepk+dI9NRZLBpK7dTZxswLZMHbQM1Cjq6PHg4tRUOS69Q/Yp7bdsfOb7H3Z/UFkzpgxYekBjmZVlMMZk9+7dO/71r399e8qUKRmMMa21JqUUN02Taa0N0zRxJBmTztm05pyzOXPm7Lz++uufdsjCYdN7jsdhwMSJE59JT0+XWusGRe4eJ7TUOBVCQCllxsfHq4suuuj2V155Zfns2bPfaNeuXTTCvQUGnlLKcCLcld/vpzZt2syJi4vDtGnT/kNEnDF2WMbwiFfmWVlZxtlnny379+9/RnZ29iNer9eyLMs0TRMuK98fN7uTN4pQKMS9Xq8dCASOW758+aRHHnlkbkFBgREIBKIKPYoD2ssEgIHJMhBaEV2aZfr+eEJCx+MHtm6DdiajlNrdythZI7iwTWhGiElCvTDUJq8pfvQS/3bnTqytqd76gxUSlaG6W5YCa0NAFfZIjWJgbE9FPZLIldqoaQGDiY/Q8U4qXNBR/iECsBt4ZzfRO5ASS6V8aOGqtVf5sPbjwbGJ/dNjYy45Jikx/ri27dAtJgYxZBNTALhitgCsuhozVVnqD/FtYk8Y0SX2zU1bPntm8eKPN4SCF28Btjpfbp8eMIeRy7Fjx7a/4YYbPjrppJOO0lrrYDDITNPkQghorVsc/PpLwmFntGTJEs9LL710EmNsRW5u7mE7Ly8oKDByc3Othx566JrRo0d3lFLajDHmMkU3ZW4/WTEAUGZmpi8QCNzGGJs3f/58EQgEDneGx29eobs6hnMupJS6U6dO8tRTT53z9ttv8759+75QXFysDscZ+pGuzFl2djYvKysz//73v1/Rt29fcixO5g7a/lickQuVMcaklGZ6enrKxRdfXHLRRRf5hBByH4QmisMA1xhzNsB+CR5XWEWcXR2S7xIh0FpEZhiYYiCkgP6Y7YlP65faZsbwuBQczTy2tqoNsi1Wq2wj3muqGB6nKw3TXKUsfFNTIz7fuP3H7+tr31pD9Ek1MAeAAGO2q/fyCKYbAlkOkkThwHUAhh9gNc7/nQrQ9KaKy+z5gLgNMOY5Sp8ADiLtGiPO2ud+p+JcObCwlrGLahjDO3W7gbrdD7y1fcvNvX9YRTn9e/JWMbGXZaa0Rmtom6k68IQYhESMuV0CK3bWwIyJ39ExNXX32o0bhjPG/usfPNjMy8tDRUWFao7lFRQUcABITEzset1117150kknHWXbthJCCI/Hg4gz8T3mrfGaaCxkI/PP90fRRRoMkesjcs25vzvySFmWJf75z3++P2/evK8Op3s9JydHTJ8+3Ro/fvy0s8466wIAinPecMbvPt/egv2a2gPOOBqcc3XOOecMevfddx8dNWrUlfPnzxejRo2SR7o8acyWD4e8am6tuPd3DE4upWRdu3alKVOmPBMIBN6YPHnyDvyUyvi/ocwLCgpEIBCwcnNz54wZM+ZkrbVkjBkHIGyb3JgO1IUXXsh27dr1z2uvvfaG+fPnh470xXokwFWgB7NZXAHjGmSuwG1JoKArtN33uD8PhIU05SpzP39fLy8AWABMEahDLyb+Pj6l7ZSxKe3QnoO8VKdr5Q7TSwRmeCkYl6g3CUOs21opPt25ofrr+uqqVUo9sAN4CcBaIBx5DoKOLMpSFA5e5ACQA3C3EOnZgCxvIOIER+G3RzNxDi4CwEZX4TMAL04iAQAlJeFSsQGAIvLGBRHpHCJeDBBn7IdtQN42Iny0+Ht0A74Y3iolcGLXo9p1a5OEdZu34+tN23YtUap6dVXlXctCci6AjZxzkFKCMWbn5+fvdVDbt28vGGP01FNPnTtu3LheAEKmaXoty9ojeK2peY5QRBQmpw1BaT+TFy1dZ+5a0FqzRvdtiG1xvYQO+9aLFi1668knn5zkpIYersAn9vLLLysi4lOnTv1ru3btDMuytMfj+dkY7WcAXMNeklKKuLg45OfnXz5//vzAmDFjNh8ORXSoPSPuc0gp92ue96XAmzLqmpIf7j1d4ghATZ48mb///vt3L1++/LLi4mKWm5v7v8HMnSIntHz58j4zZsw4xev12rZtH1BAxz4mXnDO7ZycnCvefffdd0eNGvXK/PnzjahC3/eGcfP2XWV6oIpTaw3btuHxePZb6LjvNwxjD+PgYJ7L/Sy3qEhz9gwDdACgRNA5x8clPveH1KMwnMXaHiVhyVqTVL1IYQLM9KDC4OyD3TvER5U7SpfW1C1eF2bgC8EYGBEGA2Y5oHU44h0lYaXgFpXhTzBmE4ASIrdmOgCMjgH18wKUDrB2Hk98LekZXtMDr8cDjxAwDAFiDLYtUWeFELJsJBIrqLCCO7cCYjvwSm4J1kcMKjiAQeFCMNp1DZcAKkzlqaHMbJ7fj/yvvnp89c7KJ9/eWXlnIkNMPQE/AkUAlnPDUG7ZOWeNqA7JyQOvu/lvWVsrt5f94x//WNRE2hPLz8+3Tz311Nhjjz32NsYYSSm9roBsbn1IKRHhrVOGYQg0OnLYvXs3qqursXv3btTV1bnMqWENRzJtzjk6deoEIkKrVq32KMDTCLYjtJmU0jBNU3z99dfinnvumczCxxeHy9PH8vLyjKKiIu9dd91VPGHChNZKKSWEEAdrZEcyTMMwIKXUo0ePVjNmzHgnLy9vQk5OzpaSkhJ5JCp0JxulYd0eTBDrXmQEIyJjf4wEx6hgl1122YAnnniC0tLSDrnL4EhV5qywsJAxxrwPPPDAh926dWtt27bmnPP9YW4tZZhSSqN9+/bqpptuuvONN974etu2bT9G3e17R3JyMhmGoQFoZ/McsNDgnMM0TWit+YEIHCdgB873Oej1AEAzxnRycjI171aHIqDV0RynZ6WmPzUxpZM6yjYAu860ScJHnDwiRW/2gn1iVYbeq9iycUmw/up1QCmAoFvE5TYiHgi7syNTAHkBwo1UysMXQNQegK8P2MOd4uJbdyLSyaZvcNfkZDNNeJAsOGI5h8E5PKYBwzQhhOP9YBwEQBPBkgrQCFiwsVUrbKXgjat37NjwbZ2tNwaDbEXI+ocFvFsO1IAxFDjfL0JwN7D2/PJyFAD8dsb0ZqKbN4er04ARhe8nJdK86H79zX9NXbl+84MXXXK57tilY7f01smp7737zi0AFp122mkiUpkXFxfz3NxclZmZ+Y9+/foZzlwIV5nvpXqZu5aIcy5Wr16NFStWrFywYIHRs2fP28ePH7+krKyMr1y5Uq9cuRKbN28GAJimCdM0UVdXB9u2G/4WGxuLnJwcMMbY8ccfTzt27EguKip69KijjsLAgQPZ4MGDSSnVMTEx0RMbG+sqewuAfPfddwtLSkpC8+fPNxhjh4UUOONk/+UvfznusssuOwURQcEtUeZ7e43LbN2zX4eJq0suuaT/li1bTr/11lsfdgjPEcnOd+3axS3L4vvr6duXMjYMA/Hx8fD5fAhvJ+ItMZqc13DGmOzQoUPPAQMGnJWdnf2yW1zsd63MCwoKBGNMzpgx4+L8/PxUAEoIIfbD2nQXWYuUgxCCKaVoxIgRvW+55Zb7c3NzzzzEVb9+d1ixYoWnd+/eXGvt3V83XlObRCmFxMRExMTE7BeLdhW61hrbtm3j++s+bQzHXeoFgJUrV3ob/38WYHwISAKOGmR43zk1rX2P0a3b6biqGgFdCyYkpOmhSjOOLQvWi9d+XIPPg3UrN0EP3IOFhxm4DuzJbngOwEoYU4Gw0srsBpw4BJAqPvHWHnGJCX28CegaH48UzhBDEvHasmOlggcKUgMhYia0BW0FoZkO12TnHJwbYMwAA4PJyYaHILlAvZnSPpiW2r6Ge7ChJoRFO7e/vKx298LvKrb8dyHR5wFgPmPMNToYGgVxBQANIvgBsx5gS4ksiok569bbAz0unjQp/vtFi/42Jms0zKTEBj0CwE5ISmqyMprLWHr37p0RmS4aGVOxNyPMtm28//778y699NJnKyoqXjyYNV5SUtL4T3tUf+rSpUv2hAkTxk2cOFF27NixU319/QWfffbZFzfddNM9hzmvWCxZsoQlJSUdc8opp/w3NTXVdjyMaCkbdffN3lzFrovaSec1TdOUEydO/GdJScn60aNHv+6WjT2SHIaMMf7cc899WlRUVJaYmMjr6+u1681taXOdJsgelFKIj4/nWVlZesKECd0zMjImJSYmkta6RSmsTrlxSklJSZw8eXIHxhjNnj2blZWV/X6ZeV5ennn77bfbHTt2HDdu3LhZXq/XklKarlW+r4FzFih3f2+saJpawI6gEEII+9prrx21atWqKRUVFS/8UpV7fkvIzMyUAPDVV1/9WwjxvmEYe21W0YLNwmJiYuiVV17pOnHixFcnTZqkpZS8Jccp7pmYaZp60aJF/N///vfZffv2XW4YxgGnf9i2jZiYGJJSsvLy8k2Rzwy3DCvQbohhlk5q16XL0KQ0yXfuMnycQ4PADZ9e7+H87cof69/dtrl0paa/dPWk1pO1neUS8ZIw0/6ZkVgA8OmALgFgEvXrx9jt3b2JYzITUhKOi+do5/EimfnIDFrEdlUSBIMUxBVnZh0H6gngjACmw51PGAGcQAwgRoBW4MwGZxwhMDOkNbgieEK2bgWDUqkeXTxednyXTviRgplrerXPLF21Pvjx5t0ffWbb1wUY+y6ibvweY+swDLtXr6NvePJvgWtPGjeufXxSEpI9Jrp26Uph9a+0pW14uE/trtrpKX377T26ebnIzs4GAJx++ul1jDFYlgWP6YEmjb0ZjY67XG7ZssVzxx133FlRUfEZEXkRTjfljbudVVZW7nN9uG1SI9ql6kbrr/SRRx4pfeSRRwAAp5122n2LFi2qLigoOGzpRy7ZCQQC1pw5cy4bMWJEuuPqb2Citm3DNM19kh3GGG9OHroerwhlBADo27evedttt10/adIkV5kfSS1yFQCemZn5xpVXXjnjcNzgo48+wh133IGbb775senTp19imiaPNKT2RjyEEIiLi6Nhw4ZZwCGpLHlkK3O/34+ioiLvnDlz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" alt="AUTOSAR">
+    <div class="header-divider"></div>
+    <div class="header-event">
+      <div class="header-event-title">17th Open Conference Q&A</div>
+      <div class="header-event-sub">Shanghai · June 2026</div>
+    </div>
+    <div class="header-spacer"></div>
+  </div>
+
+  <!-- Sticky topbar -->
   <div class="topbar">
-    <div class="topbar-logo">Slide<span>Q&A</span></div>
+    <span class="topbar-label">Live Q&A Platform</span>
     <div class="topbar-spacer"></div>
     <div id="mode-indicator" class="mode-badge" style="display:none"></div>
     <div id="conn-dot" class="connection-dot" title="Connection status"></div>
   </div>
 
   <main>
+
     <!-- Mode selector -->
     <div id="mode-select">
-      <h1>SlideQ&A</h1>
-      <p>Real-time audience Q&amp;A for your presentations. No subscriptions, no blocked services.</p>
+      <h1>Welcome to the Q&amp;A</h1>
+      <p>Submit and upvote questions for the presenter in real time</p>
       <div class="mode-cards">
         <div class="mode-card" onclick="requestPresenter()">
           <div class="icon">🎤</div>
           <h3>Presenter</h3>
-          <p>Manage sessions, moderate questions, pin highlights</p>
+          <p>Manage sessions, moderate questions, control the Q&amp;A</p>
         </div>
         <div class="mode-card" onclick="setMode('audience')">
           <div class="icon">🙋</div>
-          <h3>Audience</h3>
-          <p>Submit questions and upvote others in real time</p>
+          <h3>Participant</h3>
+          <p>Submit your question and follow the live session</p>
         </div>
       </div>
     </div>
 
-    <!-- Password lock screen -->
+    <!-- Lock screen -->
     <div id="lock-screen" style="display:none">
       <div class="lock-card">
         <div class="lock-icon">🔒</div>
@@ -407,45 +368,56 @@
       </div>
     </div>
 
-    <!-- Presenter view -->
-    <div id="presenter-view">
-      <div id="session-bar">
-        <select id="session-select" class="session-select" onchange="selectSession(this.value)">
-          <option value="">Select a session...</option>
-        </select>
-        <button class="btn primary" onclick="showNewSession()">+ New Session</button>
-        <button class="btn danger" onclick="clearAnswered()" title="Remove answered questions">Clear answered</button>
-      </div>
+    <!-- ══════════ PRESENTER VIEW ══════════ -->
+    <div id="presenter-view" style="display:none">
 
-      <div id="new-session-form" style="display:none">
-        <div class="new-session-form">
-          <input type="text" id="session-name-input" placeholder="Session name (e.g. Day 1 Keynote)" maxlength="60">
-          <button class="btn primary" onclick="createSession()">Create</button>
-          <button class="btn" onclick="hideNewSession()">Cancel</button>
+      <!-- Session list -->
+      <div id="session-manager">
+        <div class="toolbar">
+          <span class="section-title" style="flex:1">Sessions</span>
+          <button class="btn primary" onclick="showNewSession()">+ New session</button>
         </div>
-      </div>
-
-      <div id="qr-section" class="qr-section" style="display:none">
-        <div class="qr-box">
-          <canvas id="qr-canvas" width="120" height="120"></canvas>
+        <div id="new-session-form" style="display:none">
+          <div class="new-session-form">
+            <input type="text" id="session-name-input" placeholder="Session name (e.g. Morning Q&A — Day 1)" maxlength="70">
+            <button class="btn primary" onclick="createSession()">Create</button>
+            <button class="btn" onclick="hideNewSession()">Cancel</button>
+          </div>
         </div>
-        <div class="qr-info">
-          <h3>Audience link</h3>
-          <p>Share this with your audience so they can submit questions</p>
-          <div class="qr-url" id="audience-url"></div>
-          <button class="btn sm" style="margin-top:8px" onclick="copyAudienceUrl()">Copy URL</button>
+        <div class="session-grid" id="session-grid"></div>
+      </div>
+
+      <!-- Active session detail -->
+      <div id="active-session-panel" style="display:none">
+        <div class="back-bar">
+          <button class="btn sm" onclick="backToSessions()">← Sessions</button>
+          <h2 id="active-session-name"></h2>
+          <button class="btn sm export-btn" onclick="exportCSV()">↓ CSV</button>
+          <button class="btn sm export-btn" onclick="exportPDF()">↓ PDF</button>
         </div>
-      </div>
 
-      <div id="presenter-stats" class="stats-row" style="display:none">
-        <div class="stat-card accent"><div class="val" id="stat-total">0</div><div class="lbl">Total questions</div></div>
-        <div class="stat-card amber"><div class="val" id="stat-pending">0</div><div class="lbl">Unanswered</div></div>
-        <div class="stat-card green"><div class="val" id="stat-answered">0</div><div class="lbl">Answered</div></div>
-      </div>
+        <div class="qr-section">
+          <canvas id="qr-canvas" width="96" height="96"></canvas>
+          <div class="qr-info">
+            <h3>Audience link</h3>
+            <p>Share this URL or scan the QR code</p>
+            <div class="qr-url" id="audience-url"></div>
+            <button class="btn sm" style="margin-top:7px" onclick="copyAudienceUrl()">Copy URL</button>
+          </div>
+        </div>
 
-      <div id="presenter-questions" style="display:none">
+        <div class="stats-row">
+          <div class="stat-card c-accent"><div class="val" id="stat-total">0</div><div class="lbl">Questions</div></div>
+          <div class="stat-card c-amber"><div class="val" id="stat-pending">0</div><div class="lbl">Unanswered</div></div>
+          <div class="stat-card c-green"><div class="val" id="stat-answered">0</div><div class="lbl">Answered</div></div>
+          <div class="stat-card c-green">
+            <div class="val live-indicator"><span class="live-dot-sm"></span><span id="stat-live">0</span></div>
+            <div class="lbl">Live now</div>
+          </div>
+        </div>
+
         <div class="sort-bar">
-          <span>Sort by:</span>
+          <span>Sort:</span>
           <button class="sort-btn active" onclick="setSort('votes',this)">Most voted</button>
           <button class="sort-btn" onclick="setSort('newest',this)">Newest</button>
           <button class="sort-btn" onclick="setSort('oldest',this)">Oldest</button>
@@ -459,119 +431,103 @@
       </div>
     </div>
 
-    <!-- Audience view -->
-    <div id="audience-view">
-      <div id="pinned-display">
-        <div class="pin-label">📌 Highlighted by presenter</div>
-        <div class="pin-text" id="pinned-text"></div>
-        <div class="pin-author" id="pinned-author"></div>
+    <!-- ══════════ AUDIENCE VIEW ══════════ -->
+    <div id="audience-view" style="display:none">
+
+      <!-- Session picker -->
+      <div id="audience-session-picker">
+        <div class="section-title" style="margin-bottom:14px">Select your session</div>
+        <div class="audience-session-grid" id="audience-session-grid"></div>
       </div>
 
-      <div id="audience-session-bar" style="margin-bottom:20px">
-        <div class="section-title">Select Session</div>
-        <select id="audience-session-select" class="session-select" onchange="selectAudienceSession(this.value)" style="max-width:360px">
-          <option value="">Choose a session...</option>
-        </select>
-      </div>
+      <!-- Q&A area -->
+      <div id="audience-qa-area" style="display:none">
+        <div class="back-bar">
+          <button class="btn sm" onclick="backToSessionPicker()">← Sessions</button>
+          <h2 id="aud-session-name" style="font-size:14px;font-weight:600;flex:1"></h2>
+        </div>
 
-      <div id="submit-card" class="submit-card" style="display:none">
-        <h2>Ask a question</h2>
-        <div class="form-group">
-          <label>Your name (optional)</label>
-          <input type="text" class="form-input" id="author-input" placeholder="Anonymous" maxlength="50">
+        <div id="pinned-display">
+          <div class="pin-label">📌 Highlighted by presenter</div>
+          <div class="pin-text" id="pinned-text"></div>
+          <div class="pin-author" id="pinned-author"></div>
         </div>
-        <div class="form-group">
-          <label>Question</label>
-          <textarea class="form-textarea" id="question-input" placeholder="Type your question here..." maxlength="500" oninput="updateCharCount()"></textarea>
-          <div class="char-count"><span id="char-count">0</span>/500</div>
-        </div>
-        <div class="submit-row">
-          <span style="font-size:12px; color:var(--muted)">Your question is visible to everyone</span>
-          <button class="submit-btn" onclick="submitQuestion()">Submit question</button>
-        </div>
-      </div>
 
-      <div id="audience-questions" style="display:none">
-        <div class="sort-bar">
-          <span>Sort by:</span>
-          <button class="sort-btn active" onclick="setAudienceSort('votes',this)">Most voted</button>
-          <button class="sort-btn" onclick="setAudienceSort('newest',this)">Newest</button>
+        <div class="submit-card">
+          <h2>Ask a question</h2>
+          <div class="form-group">
+            <label>Your name (optional)</label>
+            <input type="text" class="form-input" id="author-input" placeholder="Anonymous" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label>Your question</label>
+            <textarea class="form-textarea" id="question-input" placeholder="Type your question here..." maxlength="500" oninput="updateCharCount()"></textarea>
+            <div class="char-count"><span id="char-count">0</span> / 500</div>
+          </div>
+          <div class="submit-row">
+            <button class="submit-btn" onclick="submitQuestion()">Submit question</button>
+          </div>
         </div>
-        <div class="q-list" id="audience-q-list"></div>
+
+        <div id="audience-questions" style="display:none">
+          <div class="privacy-notice">🔒 Only your submitted questions are shown here.</div>
+          <div class="sort-bar">
+            <span>Sort:</span>
+            <button class="sort-btn active" onclick="setAudienceSort('newest',this)">Newest</button>
+            <button class="sort-btn" onclick="setAudienceSort('votes',this)">Most voted</button>
+          </div>
+          <div class="q-list" id="audience-q-list"></div>
+        </div>
       </div>
     </div>
+
   </main>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
-// State
+// ── CHANGE THIS PASSWORD BEFORE DEPLOYING ─────────
+const PRESENTER_PASSWORD = 'myevent2025';
+// ──────────────────────────────────────────────────
+
 let mode = null;
 let currentSessionId = null;
 let questions = [];
 let sessions = [];
+let audienceCounts = {};
 let sortMode = 'votes';
-let audienceSortMode = 'votes';
+let audienceSortMode = 'newest';
 let currentTab = 'all';
-let votedIds = new Set(JSON.parse(localStorage.getItem('slideqa_voted') || '[]'));
 let eventSource = null;
+let presenceSource = null;
 let reconnectTimer = null;
 
-// QR Code (simple canvas-based, no external lib)
-function drawQR(canvas, text) {
-  // Minimal QR placeholder - shows URL as text in canvas
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0,0,120,120);
-  ctx.fillStyle = '#000';
-  ctx.font = '7px monospace';
-  ctx.fillText('Scan with', 10, 20);
-  ctx.fillText('WeChat or', 10, 32);
-  ctx.fillText('browser', 10, 44);
-  ctx.font = '6px monospace';
-  // Draw simple border pattern
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(5, 55, 110, 58);
-  ctx.font = '7px monospace';
-  const words = text.replace('http://','').split('/');
-  let y = 70;
-  words.forEach(w => {
-    if (w) { ctx.fillText(w, 12, y); y += 12; }
-  });
+// Stable anonymous identity per browser
+let participantId = localStorage.getItem('slideqa_pid');
+if (!participantId) {
+  participantId = 'p_' + Math.random().toString(36).substr(2, 12);
+  localStorage.setItem('slideqa_pid', participantId);
 }
 
-// Real QR using qrcode library from npm equivalent
+// ── QR ──────────────────────────────────────────
 function loadQR(url) {
   const canvas = document.getElementById('qr-canvas');
-  // Use QRCode.js if available, else fallback
   if (window.QRCode) {
-    canvas.width = 120; canvas.height = 120;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0,0,120,120);
-    try {
-      QRCode.toCanvas(canvas, url, { width: 120, margin: 1, color: { dark: '#000', light: '#fff' }});
-    } catch(e) { drawQR(canvas, url); }
-  } else {
-    drawQR(canvas, url);
+    try { QRCode.toCanvas(canvas, url, { width: 96, margin: 1, color: { dark: '#000', light: '#fff' }}); return; } catch(e) {}
   }
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,96,96);
+  ctx.fillStyle = '#333'; ctx.font = '6px monospace';
+  url.replace('https://','').split(/[/?&]/).slice(0,6).forEach((p,i) => { if(p) ctx.fillText(p, 6, 14 + i*12); });
 }
 
-// SSE connection
+// ── SSE ─────────────────────────────────────────
 function connect() {
-  if (eventSource) { eventSource.close(); }
+  if (eventSource) eventSource.close();
   eventSource = new EventSource('/api/events');
-
-  eventSource.onopen = () => {
-    document.getElementById('conn-dot').className = 'connection-dot live';
-  };
-
-  eventSource.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    handleEvent(data);
-  };
-
+  eventSource.onopen = () => document.getElementById('conn-dot').className = 'connection-dot live';
+  eventSource.onmessage = e => handleEvent(JSON.parse(e.data));
   eventSource.onerror = () => {
     document.getElementById('conn-dot').className = 'connection-dot';
     eventSource.close();
@@ -580,55 +536,49 @@ function connect() {
   };
 }
 
+function connectPresence(sid) {
+  if (presenceSource) presenceSource.close();
+  presenceSource = new EventSource('/api/presence?sessionId=' + sid);
+  presenceSource.onerror = () => presenceSource.close();
+}
+
 function handleEvent(data) {
   switch(data.type) {
     case 'init':
       questions = data.questions || [];
       sessions = data.sessions ? Object.values(data.sessions) : [];
-      renderAll();
-      break;
+      audienceCounts = data.audienceCounts || {};
+      renderAll(); break;
     case 'question_added':
-      questions.push(data.question);
-      renderAll();
-      break;
+      questions.push(data.question); renderAll(); break;
     case 'question_updated':
       const qi = questions.findIndex(q => q.id === data.question.id);
       if (qi !== -1) questions[qi] = data.question;
-      renderAll();
-      break;
+      renderAll(); break;
     case 'question_deleted':
-      questions = questions.filter(q => q.id !== data.questionId);
-      renderAll();
-      break;
+      questions = questions.filter(q => q.id !== data.questionId); renderAll(); break;
     case 'session_created':
-      sessions.push(data.session);
-      renderSessionSelects();
-      break;
+      sessions.push(data.session); audienceCounts[data.session.id] = 0;
+      renderAll(); break;
     case 'session_deleted':
       sessions = sessions.filter(s => s.id !== data.sessionId);
-      if (currentSessionId === data.sessionId) currentSessionId = null;
-      renderSessionSelects();
-      renderAll();
-      break;
+      if (currentSessionId === data.sessionId) { currentSessionId = null; backToSessions(); backToSessionPicker(); }
+      renderAll(); break;
     case 'cleared':
       if (data.sessionId) questions = questions.filter(q => q.sessionId !== data.sessionId);
       else questions = [];
-      renderAll();
-      break;
+      renderAll(); break;
+    case 'audience_counts':
+      audienceCounts = data.counts; renderAll(); break;
   }
 }
 
 function renderAll() {
-  renderSessionSelects();
-  if (mode === 'presenter') renderPresenter();
-  if (mode === 'audience') renderAudience();
+  if (mode === 'presenter') { renderSessionGrid(); if (currentSessionId) renderPresenter(); }
+  if (mode === 'audience') { renderAudienceSessionGrid(); if (currentSessionId) renderAudience(); }
 }
 
-// ── PRESENTER PASSWORD ──────────────────────────────────────────
-// Change this to your own password before deploying
-const PRESENTER_PASSWORD = 'myevent2025';
-// ────────────────────────────────────────────────────────────────
-
+// ── PASSWORD ────────────────────────────────────
 function requestPresenter() {
   document.getElementById('mode-select').style.display = 'none';
   document.getElementById('lock-screen').style.display = 'flex';
@@ -638,380 +588,336 @@ function requestPresenter() {
 function checkPassword() {
   const val = document.getElementById('lock-input').value;
   const input = document.getElementById('lock-input');
-  const err = document.getElementById('lock-error');
   if (val === PRESENTER_PASSWORD) {
-    input.classList.remove('error');
-    err.style.display = 'none';
     document.getElementById('lock-screen').style.display = 'none';
     setMode('presenter');
   } else {
-    input.classList.add('error');
-    err.style.display = 'block';
     input.value = '';
-    input.focus();
+    input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+    document.getElementById('lock-error').style.display = 'block';
+    setTimeout(() => input.classList.remove('shake'), 400);
   }
 }
 
 function setMode(m) {
   mode = m;
   document.getElementById('mode-select').style.display = 'none';
+  document.getElementById('lock-screen').style.display = 'none';
   const mi = document.getElementById('mode-indicator');
   mi.style.display = '';
   if (m === 'presenter') {
-    mi.textContent = 'Presenter';
-    mi.className = 'mode-badge';
+    mi.textContent = 'Presenter'; mi.className = 'mode-badge';
     document.getElementById('presenter-view').style.display = 'block';
-    renderPresenter();
+    renderSessionGrid();
   } else {
-    mi.textContent = 'Audience';
-    mi.className = 'mode-badge audience';
+    mi.textContent = 'Participant'; mi.className = 'mode-badge audience';
     document.getElementById('audience-view').style.display = 'block';
-    renderAudience();
+    renderAudienceSessionGrid();
   }
-  const url = new URL(window.location);
-  url.searchParams.set('mode', m);
-  window.history.replaceState({}, '', url);
+  const u = new URL(window.location); u.searchParams.set('mode', m); window.history.replaceState({}, '', u);
 }
 
-function renderSessionSelects() {
-  // Presenter
-  const ps = document.getElementById('session-select');
-  const pv = ps.value;
-  ps.innerHTML = '<option value="">Select a session...</option>';
-  sessions.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s.id; o.textContent = s.name + ' (' + s.id + ')';
-    ps.appendChild(o);
-  });
-  if (pv) ps.value = pv;
-
-  // Audience
-  const as = document.getElementById('audience-session-select');
-  const av = as.value;
-  as.innerHTML = '<option value="">Choose a session...</option>';
-  sessions.filter(s => s.active).forEach(s => {
-    const o = document.createElement('option');
-    o.value = s.id; o.textContent = s.name;
-    as.appendChild(o);
-  });
-  if (av) as.value = av;
+// ── SESSION MANAGEMENT ──────────────────────────
+function renderSessionGrid() {
+  const grid = document.getElementById('session-grid');
+  if (!sessions.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No sessions yet. Create one to get started.</p></div>';
+    return;
+  }
+  grid.innerHTML = sessions.map(s => {
+    const qCount = questions.filter(q => q.sessionId === s.id).length;
+    const live = audienceCounts[s.id] || 0;
+    return `<div class="session-card" onclick="openSession('${s.id}')">
+      <div class="session-card-name">${escHtml(s.name)}</div>
+      <div class="session-card-meta">${new Date(s.created).toLocaleDateString()} · ID: ${s.id}</div>
+      <div class="session-card-stats">
+        <span class="sstat q">${qCount} questions</span>
+        ${live > 0 ? `<span class="sstat live">● ${live} live</span>` : ''}
+      </div>
+      <div class="session-card-actions" onclick="event.stopPropagation()">
+        <button class="btn sm export-btn" onclick="exportSessionCSV('${s.id}')">CSV</button>
+        <button class="btn sm export-btn" onclick="exportSessionPDF('${s.id}')">PDF</button>
+        <button class="btn sm danger" onclick="deleteSession('${s.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function selectSession(sid) {
-  currentSessionId = sid || null;
-  const qr = document.getElementById('qr-section');
-  const stats = document.getElementById('presenter-stats');
-  const qs = document.getElementById('presenter-questions');
-  if (sid) {
-    qr.style.display = 'flex';
-    stats.style.display = 'grid';
-    qs.style.display = 'block';
-    const audienceUrl = window.location.origin + '/?mode=audience&session=' + sid;
-    document.getElementById('audience-url').textContent = audienceUrl;
-    loadQR(audienceUrl);
-  } else {
-    qr.style.display = 'none';
-    stats.style.display = 'none';
-    qs.style.display = 'none';
-  }
+function openSession(sid) {
+  currentSessionId = sid;
+  const sess = sessions.find(s => s.id === sid);
+  document.getElementById('session-manager').style.display = 'none';
+  document.getElementById('active-session-panel').style.display = 'block';
+  document.getElementById('active-session-name').textContent = sess ? sess.name : sid;
+  const audienceUrl = window.location.origin + '/?mode=audience';
+  document.getElementById('audience-url').textContent = audienceUrl;
+  loadQR(audienceUrl);
   renderPresenter();
 }
 
+function backToSessions() {
+  currentSessionId = null;
+  document.getElementById('active-session-panel').style.display = 'none';
+  document.getElementById('session-manager').style.display = 'block';
+  renderSessionGrid();
+}
+
+async function deleteSession(sid) {
+  const sess = sessions.find(s => s.id === sid);
+  const qc = questions.filter(q => q.sessionId === sid).length;
+  if (!confirm(`Delete "${sess ? sess.name : sid}"?\n\nThis removes ${qc} question(s) permanently.`)) return;
+  await fetch('/api/sessions/' + sid, { method: 'DELETE' });
+  toast('Session deleted', 'success');
+}
+
+function showNewSession() { document.getElementById('new-session-form').style.display = 'block'; document.getElementById('session-name-input').focus(); }
+function hideNewSession() { document.getElementById('new-session-form').style.display = 'none'; }
+
+async function createSession() {
+  const name = document.getElementById('session-name-input').value.trim() || 'Q&A Session';
+  const res = await fetch('/api/sessions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+  const sess = await res.json();
+  hideNewSession(); document.getElementById('session-name-input').value = '';
+  toast('Session created', 'success');
+  openSession(sess.id);
+}
+
+// ── AUDIENCE SESSION GRID ───────────────────────
+function renderAudienceSessionGrid() {
+  const grid = document.getElementById('audience-session-grid');
+  if (!sessions.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>No sessions available yet. Please wait for the presenter.</p></div>';
+    return;
+  }
+  grid.innerHTML = sessions.map(s => `
+    <div class="aud-session-card ${s.id === currentSessionId ? 'selected' : ''}" onclick="selectAudienceSession('${s.id}')">
+      <div class="aud-sess-name">${escHtml(s.name)}</div>
+      <div class="aud-sess-sub">${new Date(s.created).toLocaleDateString()}</div>
+      <div class="aud-sess-tap">Tap to join →</div>
+    </div>`).join('');
+}
+
 function selectAudienceSession(sid) {
-  currentSessionId = sid || null;
-  document.getElementById('submit-card').style.display = sid ? 'block' : 'none';
-  document.getElementById('audience-questions').style.display = sid ? 'block' : 'none';
+  currentSessionId = sid;
+  const sess = sessions.find(s => s.id === sid);
+  document.getElementById('audience-session-picker').style.display = 'none';
+  document.getElementById('audience-qa-area').style.display = 'block';
+  document.getElementById('aud-session-name').textContent = sess ? sess.name : '';
+  connectPresence(sid);
   renderAudience();
+  const u = new URL(window.location); u.searchParams.set('session', sid); window.history.replaceState({}, '', u);
 }
 
+function backToSessionPicker() {
+  currentSessionId = null;
+  if (presenceSource) presenceSource.close();
+  document.getElementById('audience-qa-area').style.display = 'none';
+  document.getElementById('audience-session-picker').style.display = 'block';
+  renderAudienceSessionGrid();
+}
+
+// ── QUESTIONS ───────────────────────────────────
 function getSessionQuestions() {
-  if (!currentSessionId) return [];
-  return questions.filter(q => q.sessionId === currentSessionId);
+  return currentSessionId ? questions.filter(q => q.sessionId === currentSessionId) : [];
 }
 
-function sortedQuestions(qs, sort) {
-  return [...qs].sort((a, b) => {
-    if (sort === 'votes') return b.votes - a.votes || b.created - a.created;
-    if (sort === 'newest') return b.created - a.created;
-    if (sort === 'oldest') return a.created - b.created;
-    return 0;
-  });
+function sortedQs(qs, sort) {
+  return [...qs].sort((a,b) =>
+    sort === 'votes' ? b.votes - a.votes || b.created - a.created :
+    sort === 'newest' ? b.created - a.created : a.created - b.created
+  );
 }
 
 function renderPresenter() {
   const qs = getSessionQuestions();
-  const total = qs.length;
   const answered = qs.filter(q => q.answered).length;
-  const pending = total - answered;
-
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-total').textContent = qs.length;
+  document.getElementById('stat-pending').textContent = qs.length - answered;
   document.getElementById('stat-answered').textContent = answered;
-
-  document.getElementById('tab-all-count').textContent = total;
-  document.getElementById('tab-unanswered-count').textContent = pending;
+  document.getElementById('stat-live').textContent = audienceCounts[currentSessionId] || 0;
+  document.getElementById('tab-all-count').textContent = qs.length;
+  document.getElementById('tab-unanswered-count').textContent = qs.length - answered;
   document.getElementById('tab-answered-count').textContent = answered;
 
-  let filtered = qs;
-  if (currentTab === 'unanswered') filtered = qs.filter(q => !q.answered);
-  if (currentTab === 'answered') filtered = qs.filter(q => q.answered);
-  filtered = sortedQuestions(filtered, sortMode);
+  let filtered = currentTab === 'unanswered' ? qs.filter(q => !q.answered) :
+                 currentTab === 'answered'   ? qs.filter(q => q.answered) : qs;
+  filtered = sortedQs(filtered, sortMode);
 
   const list = document.getElementById('presenter-q-list');
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">💬</div><p>No questions yet. Share the audience link!</p></div>';
-    return;
-  }
-
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="icon">💬</div><p>No questions yet. Share the audience link!</p></div>'; return; }
   list.innerHTML = filtered.map(q => `
-    <div class="q-card ${q.pinned ? 'pinned' : ''} ${q.answered ? 'answered' : ''}" id="qcard-${q.id}">
+    <div class="q-card ${q.pinned?'pinned':''} ${q.answered?'answered':''}">
       <div class="q-card-top">
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-            ${q.pinned ? '<span class="pinned-badge">📌 Pinned</span>' : ''}
-            ${q.answered ? '<span class="answered-badge">✓ Answered</span>' : ''}
+          <div class="badge-row">
+            ${q.pinned ? '<span class="badge pin">📌 Pinned</span>' : ''}
+            ${q.answered ? '<span class="badge ans">✓ Answered</span>' : ''}
           </div>
           <div class="q-text">${escHtml(q.text)}</div>
           <div class="q-meta">
             <span class="q-author">— ${escHtml(q.author)}</span>
-            <span class="q-time">${timeAgo(q.created)}</span>
-            <span class="q-votes"><svg viewBox="0 0 16 16"><path d="M8 1l2.5 5H14l-4 3.5 1.5 5.5L8 12 4.5 15l1.5-5.5L2 6h3.5z"/></svg>${q.votes}</span>
+            <span class="q-votes">▲ ${q.votes}</span>
+            <span style="font-size:10px;color:var(--muted)">${timeAgo(q.created)}</span>
           </div>
         </div>
         <div class="q-actions">
-          <button class="btn sm ${q.pinned ? 'primary' : ''}" onclick="togglePin(${q.id},${!q.pinned})">${q.pinned ? 'Unpin' : 'Pin'}</button>
-          <button class="btn sm ${q.answered ? 'green-btn' : ''}" onclick="toggleAnswered(${q.id},${!q.answered})">${q.answered ? 'Reopen' : 'Mark answered'}</button>
-          <button class="btn sm danger" onclick="deleteQuestion(${q.id})">Delete</button>
+          <button class="btn sm ${q.pinned?'primary':''}" onclick="togglePin(${q.id},${!q.pinned})">${q.pinned?'Unpin':'Pin'}</button>
+          <button class="btn sm ${q.answered?'success':''}" onclick="toggleAnswered(${q.id},${!q.answered})">${q.answered?'Reopen':'Done'}</button>
+          <button class="btn sm danger" onclick="deleteQuestion(${q.id})">✕</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 function renderAudience() {
   const qs = getSessionQuestions();
-
-  // Show pinned
   const pinned = qs.find(q => q.pinned && !q.answered);
   const pd = document.getElementById('pinned-display');
-  if (pinned) {
-    pd.style.display = 'block';
-    document.getElementById('pinned-text').textContent = pinned.text;
-    document.getElementById('pinned-author').textContent = '— ' + pinned.author;
-  } else {
-    pd.style.display = 'none';
-  }
+  if (pinned) { pd.style.display = 'block'; document.getElementById('pinned-text').textContent = pinned.text; document.getElementById('pinned-author').textContent = '— ' + pinned.author; }
+  else pd.style.display = 'none';
 
-  const sorted = sortedQuestions(qs, audienceSortMode);
-  const list = document.getElementById('audience-q-list');
-
-  if (sorted.length === 0 && currentSessionId) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">✋</div><p>No questions yet. Be the first to ask!</p></div>';
-    return;
-  }
-
-  list.innerHTML = sorted.map(q => `
-    <div class="q-card ${q.pinned ? 'pinned' : ''} ${q.answered ? 'answered' : ''}">
+  const myQs = sortedQs(qs.filter(q => q.participantId === participantId), audienceSortMode);
+  document.getElementById('audience-questions').style.display = myQs.length ? 'block' : 'none';
+  document.getElementById('audience-q-list').innerHTML = myQs.map(q => `
+    <div class="q-card own ${q.pinned?'pinned':''} ${q.answered?'answered':''}">
       <div class="q-card-top">
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-            ${q.pinned ? '<span class="pinned-badge">📌</span>' : ''}
-            ${q.answered ? '<span class="answered-badge">✓ Answered</span>' : ''}
+          <div class="badge-row">
+            <span class="badge own">Your question</span>
+            ${q.pinned ? '<span class="badge pin">📌 Highlighted</span>' : ''}
+            ${q.answered ? '<span class="badge ans">✓ Answered</span>' : ''}
           </div>
           <div class="q-text">${escHtml(q.text)}</div>
           <div class="q-meta">
             <span class="q-author">— ${escHtml(q.author)}</span>
-            <span class="q-time">${timeAgo(q.created)}</span>
+            <span class="q-votes">▲ ${q.votes} votes</span>
           </div>
         </div>
-        <button class="upvote-btn ${votedIds.has(q.id) ? 'voted' : ''}" onclick="upvote(${q.id})" ${votedIds.has(q.id) ? 'disabled' : ''}>
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L5 7H3l5 5 5-5h-2z"/></svg>
-          ${q.votes}
-        </button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-// Actions
-function showNewSession() {
-  document.getElementById('new-session-form').style.display = 'block';
-  document.getElementById('session-name-input').focus();
-}
-function hideNewSession() {
-  document.getElementById('new-session-form').style.display = 'none';
-}
-
-async function createSession() {
-  const name = document.getElementById('session-name-input').value.trim() || 'My Session';
-  const res = await fetch('/api/sessions', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ name })
-  });
-  const sess = await res.json();
-  hideNewSession();
-  document.getElementById('session-name-input').value = '';
-  document.getElementById('session-select').value = sess.id;
-  selectSession(sess.id);
-  toast('Session created: ' + sess.name, 'success');
-}
-
+// ── ACTIONS ─────────────────────────────────────
 async function submitQuestion() {
   const text = document.getElementById('question-input').value.trim();
   const author = document.getElementById('author-input').value.trim() || 'Anonymous';
-  if (!text) { toast('Please enter a question', 'error'); return; }
-  if (!currentSessionId) { toast('Please select a session first', 'error'); return; }
-
+  if (!text) { toast('Please type a question', 'error'); return; }
   const btn = document.querySelector('.submit-btn');
   btn.disabled = true; btn.textContent = 'Submitting...';
-
   try {
-    await fetch('/api/questions', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ sessionId: currentSessionId, text, author })
-    });
-    document.getElementById('question-input').value = '';
-    updateCharCount();
-    toast('Question submitted!', 'success');
-  } catch(e) { toast('Failed to submit', 'error'); }
-
+    await fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sessionId: currentSessionId, text, author, participantId }) });
+    document.getElementById('question-input').value = ''; updateCharCount();
+    toast('Question submitted ✓', 'success');
+  } catch(e) { toast('Failed — please try again', 'error'); }
   btn.disabled = false; btn.textContent = 'Submit question';
 }
 
-async function upvote(qid) {
-  if (votedIds.has(qid)) return;
-  votedIds.add(qid);
-  localStorage.setItem('slideqa_voted', JSON.stringify([...votedIds]));
-  await fetch('/api/questions/upvote', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ questionId: qid })
-  });
+async function togglePin(qid, val) { await fetch('/api/questions/'+qid, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({pinned:val})}); }
+async function toggleAnswered(qid, val) { await fetch('/api/questions/'+qid, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({answered:val})}); }
+async function deleteQuestion(qid) { if (!confirm('Delete this question?')) return; await fetch('/api/questions/'+qid, {method:'DELETE'}); }
+
+function setSort(s,el) { sortMode=s; document.querySelectorAll('#presenter-view .sort-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderPresenter(); }
+function setAudienceSort(s,el) { audienceSortMode=s; document.querySelectorAll('#audience-view .sort-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderAudience(); }
+function setTab(t,el) { currentTab=t; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderPresenter(); }
+
+// ── EXPORT ───────────────────────────────────────
+function getExportData(sid) {
+  const sess = sessions.find(s => s.id === sid) || { name: sid, id: sid, created: Date.now() };
+  const qs = questions.filter(q => q.sessionId === sid).sort((a,b) => b.votes - a.votes);
+  return { session: sess, questions: qs };
+}
+function exportCSV() { exportSessionCSV(currentSessionId); }
+function exportPDF() { exportSessionPDF(currentSessionId); }
+
+function exportSessionCSV(sid) {
+  const { session, questions: qs } = getExportData(sid);
+  const rows = [
+    ['Session','Date','Question','Author','Votes','Status','Submitted At'],
+    ...qs.map(q => [
+      '"'+session.name.replace(/"/g,'""')+'"',
+      new Date(session.created).toLocaleDateString(),
+      '"'+q.text.replace(/"/g,'""')+'"',
+      '"'+q.author.replace(/"/g,'""')+'"',
+      q.votes, q.answered?'Answered':'Unanswered',
+      '"'+new Date(q.created).toLocaleString()+'"'
+    ])
+  ];
+  const blob = new Blob(['\uFEFF'+rows.map(r=>r.join(',')).join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'AUTOSAR-QA-'+session.name.replace(/[^a-z0-9]/gi,'_')+'.csv'; a.click();
+  toast('CSV downloaded', 'success');
 }
 
-async function togglePin(qid, val) {
-  await fetch('/api/questions/' + qid, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ pinned: val })
-  });
+function exportSessionPDF(sid) {
+  const { session, questions: qs } = getExportData(sid);
+  const date = new Date(session.created).toLocaleDateString('en-GB',{year:'numeric',month:'long',day:'numeric'});
+  const answered = qs.filter(q=>q.answered).length;
+  const rows = qs.map((q,i) => `<tr>
+    <td style="padding:8px;border-bottom:1px solid #eee;color:#aaa;font-size:11px;width:24px;vertical-align:top">${i+1}</td>
+    <td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top">
+      <div style="font-size:13px;color:#111;margin-bottom:2px">${escHtml(q.text)}</div>
+      <div style="font-size:11px;color:#999">— ${escHtml(q.author)} · ${new Date(q.created).toLocaleTimeString()}</div>
+    </td>
+    <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;color:#cc1111;font-weight:700;width:40px;vertical-align:top">${q.votes}</td>
+    <td style="padding:8px;border-bottom:1px solid #eee;width:72px;vertical-align:top">
+      <span style="font-size:10px;padding:2px 6px;border-radius:3px;background:${q.answered?'#dcfce7':'#fef3c7'};color:${q.answered?'#166534':'#92400e'}">${q.answered?'Answered':'Pending'}</span>
+    </td></tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Q&A Report — ${escHtml(session.name)}</title>
+  <style>body{font-family:-apple-system,Arial,sans-serif;margin:0;padding:28px;color:#111;max-width:760px}@media print{body{padding:0}}</style></head><body>
+  <div style="background:linear-gradient(135deg,#0a0a0e,#1a0a0a);padding:18px 22px;border-radius:8px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:16px">
+    <div>
+      <div style="font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Q&A Session Report</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:2px">${escHtml(session.name)}</div>
+      <div style="font-size:11px;opacity:0.7">17th AUTOSAR Open Conference · Shanghai · ${date}</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap">
+    ${[['Total',qs.length,'#cc1111'],['Answered',answered,'#16a34a'],['Pending',qs.length-answered,'#d97706'],['Total votes',qs.reduce((s,q)=>s+q.votes,0),'#cc1111']].map(([l,v,c])=>`
+    <div style="flex:1;min-width:90px;text-align:center;padding:11px;background:#f8f8ff;border-radius:6px">
+      <div style="font-size:22px;font-weight:700;color:${c}">${v}</div>
+      <div style="font-size:10px;color:#888">${l}</div>
+    </div>`).join('')}
+  </div>
+  <table style="width:100%;border-collapse:collapse">
+    <thead><tr style="background:#f5f5f5">
+      <th style="padding:8px;text-align:left;font-size:10px;color:#999;border-bottom:2px solid #e0e0e0">#</th>
+      <th style="padding:8px;text-align:left;font-size:10px;color:#999;border-bottom:2px solid #e0e0e0">Question</th>
+      <th style="padding:8px;text-align:center;font-size:10px;color:#999;border-bottom:2px solid #e0e0e0">Votes</th>
+      <th style="padding:8px;text-align:left;font-size:10px;color:#999;border-bottom:2px solid #e0e0e0">Status</th>
+    </tr></thead><tbody>${rows}</tbody>
+  </table>
+  <div style="margin-top:24px;font-size:10px;color:#ccc;text-align:center">AUTOSAR Q&A Platform · ${new Date().toLocaleString()}</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`;
+
+  const w = window.open(URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})));
+  if (!w) toast('Allow popups to export PDF', 'error');
+  else toast('PDF ready — Print → Save as PDF', 'success');
 }
 
-async function toggleAnswered(qid, val) {
-  await fetch('/api/questions/' + qid, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ answered: val })
-  });
-}
+// ── UTILS ────────────────────────────────────────
+function copyAudienceUrl() { navigator.clipboard.writeText(document.getElementById('audience-url').textContent).then(()=>toast('URL copied!','success')); }
+function updateCharCount() { document.getElementById('char-count').textContent = document.getElementById('question-input').value.length; }
+function escHtml(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(ts) { const s=Math.floor((Date.now()-ts)/1000); return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h ago'; }
+function toast(msg,type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+type+' show'; setTimeout(()=>t.className='toast '+type,2500); }
 
-async function deleteQuestion(qid) {
-  if (!confirm('Delete this question?')) return;
-  await fetch('/api/questions/' + qid, { method: 'DELETE' });
-}
-
-async function clearAnswered() {
-  if (!currentSessionId) return;
-  const count = getSessionQuestions().filter(q => q.answered).length;
-  if (!count) { toast('No answered questions to clear', ''); return; }
-  if (!confirm('Remove ' + count + ' answered question(s)?')) return;
-  // Delete answered ones
-  const toDelete = getSessionQuestions().filter(q => q.answered);
-  await Promise.all(toDelete.map(q => fetch('/api/questions/' + q.id, { method: 'DELETE' })));
-}
-
-function setSort(s, el) {
-  sortMode = s;
-  document.querySelectorAll('#presenter-view .sort-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderPresenter();
-}
-
-function setAudienceSort(s, el) {
-  audienceSortMode = s;
-  document.querySelectorAll('#audience-view .sort-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderAudience();
-}
-
-function setTab(t, el) {
-  currentTab = t;
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderPresenter();
-}
-
-function updateCharCount() {
-  const v = document.getElementById('question-input').value.length;
-  document.getElementById('char-count').textContent = v;
-}
-
-function copyAudienceUrl() {
-  const url = document.getElementById('audience-url').textContent;
-  navigator.clipboard.writeText(url).then(() => toast('URL copied!', 'success'));
-}
-
-// Utilities
-function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function timeAgo(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60) return 'just now';
-  if (s < 3600) return Math.floor(s/60) + 'm ago';
-  if (s < 86400) return Math.floor(s/3600) + 'h ago';
-  return Math.floor(s/86400) + 'd ago';
-}
-
-function toast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.className = 'toast ' + type, 2500);
-}
-
-// Init
+// ── INIT ─────────────────────────────────────────
 function init() {
   connect();
-
-  // Check URL params
-  const params = new URLSearchParams(window.location.search);
-  const m = params.get('mode');
-  const session = params.get('session');
-
-  if (m) {
-    setTimeout(() => {
-      if (m === 'presenter') {
-        requestPresenter();
-      } else {
-        setMode(m);
-      }
-      if (session && m === 'audience') {
-        document.getElementById('audience-session-select').value = session;
-        selectAudienceSession(session);
-      }
-    }, 300);
-  }
-
-  document.getElementById('lock-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkPassword();
-  });
-  // Enter key for new session
-  document.getElementById('session-name-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') createSession();
-  });
-  document.getElementById('question-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitQuestion();
-  });
+  const p = new URLSearchParams(window.location.search);
+  const m = p.get('mode'), session = p.get('session');
+  if (m) setTimeout(() => {
+    if (m === 'presenter') requestPresenter();
+    else { setMode(m); if (session) setTimeout(() => { if (sessions.find(s=>s.id===session)) selectAudienceSession(session); }, 600); }
+  }, 300);
+  document.getElementById('lock-input').addEventListener('keydown', e => { if(e.key==='Enter') checkPassword(); });
+  document.getElementById('session-name-input').addEventListener('keydown', e => { if(e.key==='Enter') createSession(); });
+  document.getElementById('question-input').addEventListener('keydown', e => { if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) submitQuestion(); });
 }
-
 init();
 </script>
-
-<!-- Try to load QRCode.js for better QR codes -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" onerror="console.log('QRCode lib not available, using fallback')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" onerror=""></script>
 </body>
 </html>
