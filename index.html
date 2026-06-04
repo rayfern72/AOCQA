@@ -293,6 +293,23 @@
   /* Privacy notice */
   .privacy-notice { background: rgba(62,207,142,0.05); border: 1px solid rgba(62,207,142,0.2); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--green); margin-bottom: 12px; }
 
+
+  /* Idle / coming soon notice */
+  .idle-notice {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 36px 24px;
+    text-align: center; margin-bottom: 20px;
+  }
+  .idle-notice .idle-icon { font-size: 40px; margin-bottom: 14px; }
+  .idle-notice h2 { font-size: 17px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .idle-detail {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent-glow); border: 1px solid rgba(204,17,17,0.3);
+    border-radius: 10px; padding: 14px 22px; margin-bottom: 16px;
+  }
+  .idle-detail span { font-size: 15px; font-weight: 600; color: var(--accent2); line-height: 1.6; }
+  .idle-notice .idle-sub { font-size: 12px; color: var(--muted); }
+
   /* Empty */
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
   .empty-state .icon { font-size: 30px; margin-bottom: 8px; }
@@ -436,7 +453,19 @@
 
       <!-- Session picker -->
       <div id="audience-session-picker">
-        <div class="section-title" style="margin-bottom:14px">Select your session</div>
+        <!-- Shown when no sessions exist yet -->
+        <div id="idle-notice" class="idle-notice" style="display:none">
+          <div class="idle-icon">🕐</div>
+          <h2>Q&amp;A session not started yet</h2>
+          <div class="idle-detail">
+            <span>Q&amp;A Session will commence on<br>Day 2 in Ballroom 2+3 at 17:15</span>
+          </div>
+          <div class="idle-sub">Please keep this page open — it will update automatically when the session begins.</div>
+        </div>
+        <!-- Shown when sessions are available -->
+        <div id="session-picker-header" style="display:none">
+          <div class="section-title" style="margin-bottom:14px">Select your session</div>
+        </div>
         <div class="audience-session-grid" id="audience-session-grid"></div>
       </div>
 
@@ -685,10 +714,20 @@ async function createSession() {
 // ── AUDIENCE SESSION GRID ───────────────────────
 function renderAudienceSessionGrid() {
   const grid = document.getElementById('audience-session-grid');
+  const idleNotice = document.getElementById('idle-notice');
+  const pickerHeader = document.getElementById('session-picker-header');
+
   if (!sessions.length) {
-    grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>No sessions available yet. Please wait for the presenter.</p></div>';
+    // No sessions yet — show the coming-soon notice
+    idleNotice.style.display = 'block';
+    pickerHeader.style.display = 'none';
+    grid.innerHTML = '';
     return;
   }
+
+  // Sessions exist — hide notice, show grid
+  idleNotice.style.display = 'none';
+  pickerHeader.style.display = 'block';
   grid.innerHTML = sessions.map(s => `
     <div class="aud-session-card ${s.id === currentSessionId ? 'selected' : ''}" onclick="selectAudienceSession('${s.id}')">
       <div class="aud-sess-name">${escHtml(s.name)}</div>
