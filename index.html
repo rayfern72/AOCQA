@@ -512,12 +512,8 @@
         </div>
 
         <div id="audience-questions" style="display:none">
-          <div class="privacy-notice">👁 All questions shown anonymously. Your questions are marked. You have <strong id="votes-left">3</strong> upvotes remaining.</div>
-          <div class="sort-bar">
-            <span>Sort:</span>
-            <button class="sort-btn active" onclick="setAudienceSort('newest',this)">Newest</button>
-            <button class="sort-btn" onclick="setAudienceSort('votes',this)">Most voted</button>
-          </div>
+          <div class="privacy-notice">🔒 Only your submitted questions are shown here.</div>
+
           <div class="q-list" id="audience-q-list"></div>
         </div>
       </div>
@@ -841,14 +837,6 @@ function renderPresenter() {
 
 function renderAudience() {
   const qs = getSessionQuestions();
-  const votesLeft = votesRemaining();
-
-  // Update vote counter in notice
-  const vl = document.getElementById('votes-left');
-  if (vl) {
-    vl.textContent = votesLeft;
-    vl.style.color = votesLeft === 0 ? 'var(--red)' : votesLeft === 1 ? 'var(--amber)' : 'inherit';
-  }
 
   // Pinned question banner
   const pinned = qs.find(q => q.pinned && !q.answered);
@@ -856,41 +844,28 @@ function renderAudience() {
   if (pinned) {
     pd.style.display = 'block';
     document.getElementById('pinned-text').textContent = pinned.text;
-    document.getElementById('pinned-author').textContent = '— Anonymous';
+    document.getElementById('pinned-author').textContent = '';
   } else pd.style.display = 'none';
 
-  // All questions sorted, shown anonymously
-  const sorted = sortedQs(qs, audienceSortMode);
-  document.getElementById('audience-questions').style.display = sorted.length ? 'block' : 'none';
-  document.getElementById('audience-q-list').innerHTML = sorted.map(q => {
-    const isOwn = q.participantId === participantId;
-    const hasVoted = hasVotedFor(q.id);
-    return `
-    <div class="q-card ${isOwn ? 'own' : ''} ${q.pinned?'pinned':''} ${q.answered?'answered':''}">
+  // Only show own questions, no upvotes visible
+  const myQs = sortedQs(qs.filter(q => q.participantId === participantId), audienceSortMode);
+  document.getElementById('audience-questions').style.display = myQs.length ? 'block' : 'none';
+  document.getElementById('audience-q-list').innerHTML = myQs.map(q => `
+    <div class="q-card own ${q.pinned?'pinned':''} ${q.answered?'answered':''}">
       <div class="q-card-top">
         <div style="flex:1">
           <div class="badge-row">
-            ${isOwn ? '<span class="badge own">Your question</span>' : ''}
+            <span class="badge own">Your question</span>
             ${q.pinned ? '<span class="badge pin">📌 Highlighted</span>' : ''}
             ${q.answered ? '<span class="badge ans">✓ Answered</span>' : ''}
           </div>
           <div class="q-text">${escHtml(q.text)}</div>
           <div class="q-meta">
-            <span class="q-author">— Anonymous</span>
-            <span class="q-votes">▲ ${q.votes} vote${q.votes !== 1 ? 's' : ''}</span>
+            <span class="q-author">— ${escHtml(q.author)}</span>
           </div>
         </div>
-        ${!isOwn ? `
-        <button class="upvote-btn ${hasVoted ? 'voted' : (votesLeft <= 0 ? 'disabled' : '')}"
-          onclick="upvote(${q.id})"
-          ${hasVoted || votesLeft <= 0 ? 'disabled' : ''}
-          title="${hasVoted ? 'Already upvoted' : (votesLeft <= 0 ? 'No upvotes remaining' : 'Upvote this question')}">
-          <i class="ti ti-arrow-up" style="font-size:13px" aria-hidden="true"></i>
-          ${hasVoted ? '✓' : votesLeft <= 0 ? '—' : 'Upvote'}
-        </button>` : '<div style="width:60px"></div>'}
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
 
 // ── ACTIONS ─────────────────────────────────────
