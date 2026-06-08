@@ -267,6 +267,19 @@
   .badge.own { color: var(--green); background: rgba(62,207,142,0.12); }
   .q-actions { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; align-items: flex-start; }
 
+  /* Upvote button */
+  .upvote-btn {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 7px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0; font-family: inherit;
+  }
+  .upvote-btn:hover, .upvote-btn.voted {
+    background: var(--accent-glow); border-color: rgba(204,17,17,0.4); color: var(--accent2);
+  }
+  .upvote-btn:disabled { cursor: default; opacity: 0.7; }
+
   /* Audience submit */
   .submit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
   .submit-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
@@ -499,7 +512,7 @@
         </div>
 
         <div id="audience-questions" style="display:none">
-          <div class="privacy-notice">🔒 Only your submitted questions are shown here.</div>
+          <div class="privacy-notice">👁 All questions shown anonymously. Your questions are marked. You have <strong id="votes-left">3</strong> upvotes remaining.</div>
           <div class="sort-bar">
             <span>Sort:</span>
             <button class="sort-btn active" onclick="setAudienceSort('newest',this)">Newest</button>
@@ -528,6 +541,24 @@ let audienceCounts = {};
 let sortMode = 'votes';
 let audienceSortMode = 'newest';
 let currentTab = 'all';
+// Session-scoped vote tracking: { sessionId: [qid, qid, ...] }
+// Max 3 votes per participant per session, cannot vote own question
+function getSessionVotes(sid) {
+  const all = JSON.parse(localStorage.getItem('slideqa_votes_v2') || '{}');
+  return all[sid] || [];
+}
+function saveSessionVote(sid, qid) {
+  const all = JSON.parse(localStorage.getItem('slideqa_votes_v2') || '{}');
+  if (!all[sid]) all[sid] = [];
+  if (!all[sid].includes(qid)) all[sid].push(qid);
+  localStorage.setItem('slideqa_votes_v2', JSON.stringify(all));
+}
+function hasVotedFor(qid) {
+  return getSessionVotes(currentSessionId).includes(qid);
+}
+function votesRemaining() {
+  return Math.max(0, 3 - getSessionVotes(currentSessionId).length);
+}
 let eventSource = null;
 let presenceSource = null;
 let reconnectTimer = null;
@@ -810,30 +841,56 @@ function renderPresenter() {
 
 function renderAudience() {
   const qs = getSessionQuestions();
+  const votesLeft = votesRemaining();
+
+  // Update vote counter in notice
+  const vl = document.getElementById('votes-left');
+  if (vl) {
+    vl.textContent = votesLeft;
+    vl.style.color = votesLeft === 0 ? 'var(--red)' : votesLeft === 1 ? 'var(--amber)' : 'inherit';
+  }
+
+  // Pinned question banner
   const pinned = qs.find(q => q.pinned && !q.answered);
   const pd = document.getElementById('pinned-display');
-  if (pinned) { pd.style.display = 'block'; document.getElementById('pinned-text').textContent = pinned.text; document.getElementById('pinned-author').textContent = '— ' + pinned.author; }
-  else pd.style.display = 'none';
+  if (pinned) {
+    pd.style.display = 'block';
+    document.getElementById('pinned-text').textContent = pinned.text;
+    document.getElementById('pinned-author').textContent = '— Anonymous';
+  } else pd.style.display = 'none';
 
-  const myQs = sortedQs(qs.filter(q => q.participantId === participantId), audienceSortMode);
-  document.getElementById('audience-questions').style.display = myQs.length ? 'block' : 'none';
-  document.getElementById('audience-q-list').innerHTML = myQs.map(q => `
-    <div class="q-card own ${q.pinned?'pinned':''} ${q.answered?'answered':''}">
+  // All questions sorted, shown anonymously
+  const sorted = sortedQs(qs, audienceSortMode);
+  document.getElementById('audience-questions').style.display = sorted.length ? 'block' : 'none';
+  document.getElementById('audience-q-list').innerHTML = sorted.map(q => {
+    const isOwn = q.participantId === participantId;
+    const hasVoted = hasVotedFor(q.id);
+    return `
+    <div class="q-card ${isOwn ? 'own' : ''} ${q.pinned?'pinned':''} ${q.answered?'answered':''}">
       <div class="q-card-top">
         <div style="flex:1">
           <div class="badge-row">
-            <span class="badge own">Your question</span>
+            ${isOwn ? '<span class="badge own">Your question</span>' : ''}
             ${q.pinned ? '<span class="badge pin">📌 Highlighted</span>' : ''}
             ${q.answered ? '<span class="badge ans">✓ Answered</span>' : ''}
           </div>
           <div class="q-text">${escHtml(q.text)}</div>
           <div class="q-meta">
-            <span class="q-author">— ${escHtml(q.author)}</span>
-            <span class="q-votes">▲ ${q.votes} votes</span>
+            <span class="q-author">— Anonymous</span>
+            <span class="q-votes">▲ ${q.votes} vote${q.votes !== 1 ? 's' : ''}</span>
           </div>
         </div>
+        ${!isOwn ? `
+        <button class="upvote-btn ${hasVoted ? 'voted' : (votesLeft <= 0 ? 'disabled' : '')}"
+          onclick="upvote(${q.id})"
+          ${hasVoted || votesLeft <= 0 ? 'disabled' : ''}
+          title="${hasVoted ? 'Already upvoted' : (votesLeft <= 0 ? 'No upvotes remaining' : 'Upvote this question')}">
+          <i class="ti ti-arrow-up" style="font-size:13px" aria-hidden="true"></i>
+          ${hasVoted ? '✓' : votesLeft <= 0 ? '—' : 'Upvote'}
+        </button>` : '<div style="width:60px"></div>'}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── ACTIONS ─────────────────────────────────────
@@ -856,6 +913,18 @@ async function togglePin(qid, val) { await fetch('/api/questions/'+qid, {method:
 async function toggleAnswered(qid, val) { await fetch('/api/questions/'+qid, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({answered:val})}); }
 async function deleteQuestion(qid) { if (!confirm('Delete this question?')) return; await fetch('/api/questions/'+qid, {method:'DELETE'}); }
 
+async function upvote(qid) {
+  if (hasVotedFor(qid)) return;
+  if (votesRemaining() <= 0) { toast('You have used all 3 upvotes', 'error'); return; }
+  saveSessionVote(currentSessionId, qid);
+  renderAudience();
+  try {
+    await fetch('/api/questions/upvote', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ questionId: qid }) });
+  } catch(e) {
+    toast('Upvote failed — try again', 'error');
+  }
+}
+
 function setSort(s,el) { sortMode=s; document.querySelectorAll('#presenter-view .sort-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderPresenter(); }
 function setAudienceSort(s,el) { audienceSortMode=s; document.querySelectorAll('#audience-view .sort-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderAudience(); }
 function setTab(t,el) { currentTab=t; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderPresenter(); }
@@ -871,23 +940,35 @@ function exportPDF() { exportSessionPDF(currentSessionId); }
 
 function exportSessionCSV(sid) {
   const { session, questions: qs } = getExportData(sid);
-  const rows = [
-    ['Session','Date','Question','Author','Votes','Status','Submitted At'],
-    ...qs.map(q => [
-      '"'+session.name.replace(/"/g,'""')+'"',
-      new Date(session.created).toLocaleDateString(),
-      '"'+q.text.replace(/"/g,'""')+'"',
-      '"'+q.author.replace(/"/g,'""')+'"',
-      q.votes, q.answered?'Answered':'Unanswered',
-      '"'+new Date(q.created).toLocaleString()+'"'
-    ])
+  const headers = [
+    'Question #', 'Session Title', 'Session ID',
+    'Participant Name', 'Question',
+    'Date', 'Time', 'Status', 'Upvotes', 'Was Pinned'
   ];
-  const blob = new Blob(['\uFEFF'+rows.map(r=>r.join(',')).join('\n')], {type:'text/csv;charset=utf-8;'});
+  const dataRows = qs.map((q, i) => {
+    const d = new Date(q.created);
+    const date = d.toLocaleDateString('en-GB');
+    const time = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    return [
+      i + 1,
+      '"' + session.name.replace(/"/g, '""') + '"',
+      session.id,
+      '"' + q.author.replace(/"/g, '""') + '"',
+      '"' + q.text.replace(/"/g, '""') + '"',
+      date,
+      time,
+      q.answered ? 'Answered' : 'Unanswered',
+      q.votes,
+      q.pinned ? 'Yes' : 'No'
+    ];
+  });
+  const csv = [headers, ...dataRows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'AUTOSAR-QA-'+session.name.replace(/[^a-z0-9]/gi,'_')+'.csv'; a.click();
+  a.download = 'AUTOSAR-QA-' + session.name.replace(/[^a-z0-9]/gi,'_') + '-' + session.id + '.csv';
+  a.click();
   toast('CSV downloaded', 'success');
 }
-
 function exportSessionPDF(sid) {
   const { session, questions: qs } = getExportData(sid);
   const date = new Date(session.created).toLocaleDateString('en-GB',{year:'numeric',month:'long',day:'numeric'});
